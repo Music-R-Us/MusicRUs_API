@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MusicRUs.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+57189d2dbebef23a2826ff0c4993b8365f51d45a")]
 [assembly: System.Reflection.AssemblyProductAttribute("MusicRUs.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MusicRUs.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
