@@ -1,0 +1,17 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "idleTimeoutMillis": 0
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "100.99.161.31",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "MusicRUsDb",
+            "database": "musicrus_db",
+            "username": "musicrus_team"
+        }
+    ]
+}
