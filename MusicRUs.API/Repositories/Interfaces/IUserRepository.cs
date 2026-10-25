@@ -1,0 +1,13 @@
+using MusicRUs.API.Models;
+using MusicRUs.API.Models.Entities;
+
+namespace MusicRUs.API.Repositories.Interfaces;
+
+public interface IUserRepository : IRepository<User>
+{
+    Task<User?> GetUserByUsernameAsync(string username);
+    Task<User?> GetUserByEmailAsync(string email);
+    Task<IEnumerable<User>> SearchUsersByKeywordAsync(string keyword); // search users by username keyword
+    Task<bool> EmailExistsAsync(string email);
+    Task<bool> UsernameExistsAsync(string username);
+}

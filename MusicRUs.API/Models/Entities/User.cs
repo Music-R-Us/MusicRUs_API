@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace MusicRUs.API.Models.Entities;
 /// Represents a user in the system. Implements IHasTimestamps for automatic timestamp management. 
 /// Contains properties for username, email, password hash, Google ID, and timestamps.
