@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MusicRUs.API.Data;
+using MusicRUs.API.Repositories;
+using MusicRUs.API.Repositories.Interfaces;
 using MusicRUs.API.Data.Interceptors;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
+
+
+// Repsositories (Registering repositories for dependency injection)
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped(typeof(IReadRepository<>), typeof(Repository<>)); 
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("MusicRUs")

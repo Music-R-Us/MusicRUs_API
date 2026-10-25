@@ -3,18 +3,29 @@ using MusicRUs.API.Data;
 using MusicRUs.API.Repositories.Interfaces;
 using System.Linq.Expressions;
 
+///////////////////////////////////////
+/// SOLID Principles:
+/// 
+/// S: This class focuses on data access and manipulation for a single entity type T. 
+/// O: The methods in the class are generic and can be extended/reused for new entity types without modifying this class.
+/// L: Derived repositories (<X>Repository.cs) can replace Repository<T> without breaking the code. 
+/// I: Methods are defined in the interface (IRepository<T>). Data model specific methods are kept in the derived classes (I<X>Repository.cs).
+/// D: Higher level classes (services) depend on this repositories interface (IRepository<T>), instead of this concrete class. 
+///////////////////////////////////////
+
+
 namespace MusicRUs.API.Repositories
 {
-    public class Repository<T> : IRepository<T> where T : class
+    public class Repository<T> : IRepository<T> where T : class // T is a generic type parameter
     {
         // Reference to database
-        protected readonly AppDbContext _context;
+        protected readonly DbContext _context;
 
         // Reference to DbSet 
         protected readonly DbSet<T> _dbSet;
 
         // Initialize the repository with the database context
-        public Repository(AppDbContext context)
+        public Repository(DbContext context) //Dependency Injection of DbContext
         {
             _context = context; 
             _dbSet = _context.Set<T>(); 
@@ -42,8 +53,8 @@ namespace MusicRUs.API.Repositories
         public void Delete(T entity) => _dbSet.Remove(entity);
 
         // Save changes to database
-        // (Uses _context specifically to save database changes, 
-        // as _dbSet does not have a SaveChanges method)
+        // (Uses '_context' specifically to save database changes, 
+        // as '_dbSet' does not have a SaveChanges method)
         public async Task SaveChangesAsync() => await _context.SaveChangesAsync(); 
     }
 }
