@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("c2459e16-ff82-4b6c-ab2e-bc652b1c368c")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("MusicRUs.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+57189d2dbebef23a2826ff0c4993b8365f51d45a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e2dc92f0b1a30c131867e12d3ceb6fc69f4244d8")]
 [assembly: System.Reflection.AssemblyProductAttribute("MusicRUs.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MusicRUs.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
