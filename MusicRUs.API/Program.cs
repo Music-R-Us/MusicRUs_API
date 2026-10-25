@@ -1,10 +1,24 @@
+using Microsoft.EntityFrameworkCore;
+using MusicRUs.API.Data;
+using MusicRUs.API.Data.Interceptors;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// Database
+var connectionString = builder.Configuration.GetConnectionString("MusicRUs")
+    ?? throw new InvalidOperationException(
+        "ConnectionStrings:MusicRUs mangler i user-secrets eller miljøvariabler.");
+
+builder.Services.AddSingleton<TimestampInterceptor>();
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+    options.UseNpgsql(connectionString)
+           .UseSnakeCaseNamingConvention()
+           .AddInterceptors(sp.GetRequiredService<TimestampInterceptor>()));
 
 var app = builder.Build();
 
@@ -19,9 +33,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
