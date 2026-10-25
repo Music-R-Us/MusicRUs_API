@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using MusicRUs.API.Models.Entities;
 
-namespace MusicRUs.API.Data.Configurations;
+namespace MusicRUs.API.Configurations;
 
 
 /// Configuration for the User entity, including property types, indexes, and check constraints.
