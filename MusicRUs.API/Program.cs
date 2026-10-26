@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MusicRUs.API.Data;
+using MusicRUs.API.Services;
+using MusicRUs.API.Services.Interfaces;
 using MusicRUs.API.Repositories;
 using MusicRUs.API.Repositories.Interfaces;
 using MusicRUs.API.Data.Interceptors;
@@ -14,9 +16,13 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
 
-// Repsositories (Registering repositories for dependency injection)
+// Repositories (Registering repositories for Dependency Injection)
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IReadRepository<>), typeof(Repository<>)); 
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Services (Registering services for Dependency Injection)
+builder.Services.AddScoped<IUserService, UserService>();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("MusicRUs")

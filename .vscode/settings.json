@@ -10,8 +10,8 @@
             "port": 5432,
             "driver": "PostgreSQL",
             "name": "MusicRUsDb",
-            "database": "musicrus_db",
-            "username": "musicrus_team"
+            "database": "musicrus_test_afshin",
+            "username": "musicrus_migrator"
         }
     ]
 }

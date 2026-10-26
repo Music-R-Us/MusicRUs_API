@@ -69,7 +69,47 @@ public class UserService : IUserService
         return users.Select(MapToDto);
     }
 
+    public async Task<UserResponseDto?> UpdateUsernameAsync(int id, UpdateUsernameDto dto) // UPDATE
+    {
+        var user = await _userRepo.GetByIdAsync(id);
+        if (user is null)
+        {
+            return null; // User not found
+        }
+        user.Username = dto.NewUsername;
+        user.UpdatedAt = DateTime.UtcNow;
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync();
+        return MapToDto(user);
+    }
 
+    public async Task<UserResponseDto?> UpdateEmailAsync(int id, UpdateEmailDto dto) // UPDATE
+    {
+        var user = await _userRepo.GetByIdAsync(id);
+        if (user is null)
+        {
+            return null; // User not found
+        }
+        user.Email = dto.NewEmail;
+        user.UpdatedAt = DateTime.UtcNow;
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync();
+        return MapToDto(user);
+    }
+
+    public async Task<UserResponseDto?> UpdatePasswordAsync(int id, UpdatePasswordDto dto) // UPDATE
+    {
+        var user = await _userRepo.GetByIdAsync(id);
+        if (user is null)
+        {
+            return null; // User not found
+        }
+        user.PasswordHash = dto.NewPassword;
+        user.UpdatedAt = DateTime.UtcNow;
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync();
+        return MapToDto(user);
+    }
 
     public async Task<bool> DeleteUserAsync(int id) // DELETE
     {
