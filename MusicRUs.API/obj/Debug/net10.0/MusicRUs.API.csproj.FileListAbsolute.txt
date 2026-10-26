@@ -374,3 +374,8 @@ C:\Users\Afshi\source\repos\Svendeprøve\MusicRUs_API\MusicRUs.API\obj\Debug\net
 C:\Users\Afshi\source\repos\Svendeprøve\MusicRUs_API\MusicRUs.API\obj\Debug\net10.0\MusicRUs.API.pdb
 C:\Users\Afshi\source\repos\Svendeprøve\MusicRUs_API\MusicRUs.API\obj\Debug\net10.0\MusicRUs.API.genruntimeconfig.cache
 C:\Users\Afshi\source\repos\Svendeprøve\MusicRUs_API\MusicRUs.API\obj\Debug\net10.0\ref\MusicRUs.API.dll
+C:\Users\Afshi\source\repos\Svendeprøve\MusicRUs_API\MusicRUs.API\bin\Debug\net10.0\Google.Apis.dll
+C:\Users\Afshi\source\repos\Svendeprøve\MusicRUs_API\MusicRUs.API\bin\Debug\net10.0\Google.Apis.Auth.dll
+C:\Users\Afshi\source\repos\Svendeprøve\MusicRUs_API\MusicRUs.API\bin\Debug\net10.0\Google.Apis.Core.dll
+C:\Users\Afshi\source\repos\Svendeprøve\MusicRUs_API\MusicRUs.API\bin\Debug\net10.0\System.Management.dll
+C:\Users\Afshi\source\repos\Svendeprøve\MusicRUs_API\MusicRUs.API\bin\Debug\net10.0\runtimes\win\lib\net7.0\System.Management.dll
