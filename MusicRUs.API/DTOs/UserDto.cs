@@ -7,7 +7,8 @@ namespace MusicRUs.API.DTOs;
 
 public static class PasswordRules
 {
-    public const string Pattern = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$";
+    public const string Pattern = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_])[A-Za-z\d@$!%*?&#_]{8,}$";
+
     public const string Message = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.";
 }
 
