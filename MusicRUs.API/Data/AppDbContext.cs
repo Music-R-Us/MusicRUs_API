@@ -9,6 +9,9 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) {} 
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<Artist> Artists => Set<Artist>();
+    public DbSet<Album> Albums => Set<Album>();
+    public DbSet<Track> Tracks => Set<Track>();
 
     
     protected override void OnModelCreating(ModelBuilder modelBuilder) 
