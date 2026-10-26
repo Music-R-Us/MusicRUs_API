@@ -9,8 +9,8 @@ public interface IUserService
     Task<UserResponseDto?> GetUserByUsernameAndPasswordAsync(string username, string password); // READ
     Task<UserResponseDto?> GetUserByEmailAndPasswordAsync(string email, string password); // READ
     Task<IEnumerable<UserResponseDto>> SearchUsersByKeywordAsync(string keyword); // READ
-    //Task<UserResponseDto?> UpdateUsernameAsync(int id, UpdateUsernameDto dto); // UPDATE
-    //Task<UserResponseDto?> UpdateEmailAsync(int id, UpdateEmailDto dto); // UPDATE
-    //Task<UserResponseDto?> UpdatePasswordAsync(int id, UpdatePasswordDto dto); // UPDATE
+    Task<UserResponseDto?> UpdateUsernameAsync(int id, UpdateUsernameDto dto); // UPDATE
+    Task<UserResponseDto?> UpdateEmailAsync(int id, UpdateEmailDto dto); // UPDATE
+    Task<UserResponseDto?> UpdatePasswordAsync(int id, UpdatePasswordDto dto); // UPDATE
     Task<bool> DeleteUserAsync(int id); // DELETE
 }
