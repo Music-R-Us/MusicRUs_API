@@ -14,7 +14,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
 
-// Repsositories (Registering repositories for dependency injection)
+// Repositories (Registering repositories for Dependency Injection)
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IReadRepository<>), typeof(Repository<>)); 
 
