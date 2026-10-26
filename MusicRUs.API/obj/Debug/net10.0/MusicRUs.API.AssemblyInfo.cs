@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MusicRUs.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b535a045aab17aa8c036a9b2cc2e68069442ef81")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+16ba22f56f5384d75470a735c97c9731085978a1")]
 [assembly: System.Reflection.AssemblyProductAttribute("MusicRUs.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MusicRUs.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
