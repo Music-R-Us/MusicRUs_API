@@ -439,7 +439,7 @@ namespace MusicRUs.API.Data.Migrations
                         .HasForeignKey("ProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_favorite_albums_forum_profile_profile_id");
+                        .HasConstraintName("fk_favorite_albums_forum_profiles_profile_id");
 
                     b.Navigation("Album");
 
@@ -460,7 +460,7 @@ namespace MusicRUs.API.Data.Migrations
                         .HasForeignKey("ProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_favorite_artists_forum_profile_profile_id");
+                        .HasConstraintName("fk_favorite_artists_forum_profiles_profile_id");
 
                     b.Navigation("Artist");
 
