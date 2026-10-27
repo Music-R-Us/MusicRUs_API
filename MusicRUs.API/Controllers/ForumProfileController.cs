@@ -22,7 +22,7 @@ public class ForumProfileController : ControllerBase
     // CREATE
     //##############################################################################
     // Create ForumProfile
-    [HttpPost("CreateForumeProfile/{userId:int}")]
+    [HttpPost("CreateForumProfile/{userId:int}")]
     public async Task<ActionResult<ForumProfileResponseDto>> CreateFp([FromBody] CreateForumProfileDto dto)
     {
         var fp = await _fpService.CreateFpAsync(dto);
