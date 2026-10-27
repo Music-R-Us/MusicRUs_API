@@ -267,6 +267,64 @@ namespace MusicRUs.API.Data.Migrations
                     b.ToTable("forum_profiles", (string)null);
                 });
 
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.MusicCollection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AlbumId")
+                        .HasColumnType("integer")
+                        .HasColumnName("album_id");
+
+                    b.Property<string>("Condition")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("condition");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("format");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_music_collections");
+
+                    b.HasIndex("AlbumId")
+                        .HasDatabaseName("ix_music_collections_album_id");
+
+                    b.HasIndex("UserId", "AlbumId", "Format")
+                        .IsUnique()
+                        .HasDatabaseName("ix_music_collections_user_id_album_id_format");
+
+                    b.ToTable("music_collections", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_music_collections_wanted_without_condition", "status = 'Owned' OR condition IS NULL");
+                        });
+                });
+
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Track", b =>
                 {
                     b.Property<int>("Id")
@@ -475,6 +533,27 @@ namespace MusicRUs.API.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_forum_profiles_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.MusicCollection", b =>
+                {
+                    b.HasOne("MusicRUs.API.Models.Entities.Album", "Album")
+                        .WithMany()
+                        .HasForeignKey("AlbumId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_music_collections_albums_album_id");
+
+                    b.HasOne("MusicRUs.API.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_music_collections_users_user_id");
+
+                    b.Navigation("Album");
 
                     b.Navigation("User");
                 });
