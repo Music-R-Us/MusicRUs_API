@@ -13,4 +13,5 @@ public class User : IHasTimestamps
     public string? GoogleId { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public ForumProfile? Profile { get; set; }
 }

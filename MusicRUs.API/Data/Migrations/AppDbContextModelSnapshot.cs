@@ -21,6 +21,7 @@ namespace MusicRUs.API.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "citext");
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Album", b =>
@@ -81,6 +82,12 @@ namespace MusicRUs.API.Data.Migrations
                     b.HasIndex("SpotifyId")
                         .IsUnique()
                         .HasDatabaseName("ix_albums_spotify_id");
+
+                    b.HasIndex("Title")
+                        .HasDatabaseName("ix_albums_title");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Title"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Title"), new[] { "gin_trgm_ops" });
 
                     b.ToTable("albums", (string)null);
                 });
@@ -144,11 +151,120 @@ namespace MusicRUs.API.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_artists");
 
+                    b.HasIndex("Name")
+                        .HasDatabaseName("ix_artists_name");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Name"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Name"), new[] { "gin_trgm_ops" });
+
                     b.HasIndex("SpotifyId")
                         .IsUnique()
                         .HasDatabaseName("ix_artists_spotify_id");
 
                     b.ToTable("artists", (string)null);
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.FavoriteAlbum", b =>
+                {
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("integer")
+                        .HasColumnName("profile_id");
+
+                    b.Property<int>("AlbumId")
+                        .HasColumnType("integer")
+                        .HasColumnName("album_id");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("display_order");
+
+                    b.HasKey("ProfileId", "AlbumId")
+                        .HasName("pk_favorite_albums");
+
+                    b.HasIndex("AlbumId")
+                        .HasDatabaseName("ix_favorite_albums_album_id");
+
+                    b.ToTable("favorite_albums", (string)null);
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.FavoriteArtist", b =>
+                {
+                    b.Property<int>("ProfileId")
+                        .HasColumnType("integer")
+                        .HasColumnName("profile_id");
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("integer")
+                        .HasColumnName("artist_id");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("display_order");
+
+                    b.HasKey("ProfileId", "ArtistId")
+                        .HasName("pk_favorite_artists");
+
+                    b.HasIndex("ArtistId")
+                        .HasDatabaseName("ix_favorite_artists_artist_id");
+
+                    b.ToTable("favorite_artists", (string)null);
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.ForumProfile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("avatar_url");
+
+                    b.Property<string>("Bio")
+                        .HasColumnType("text")
+                        .HasColumnName("bio");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("display_name");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_public");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("location");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("WebsiteUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("website_url");
+
+                    b.HasKey("Id")
+                        .HasName("pk_forum_profiles");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_forum_profiles_user_id");
+
+                    b.ToTable("forum_profiles", (string)null);
                 });
 
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Track", b =>
@@ -309,6 +425,60 @@ namespace MusicRUs.API.Data.Migrations
                         .HasConstraintName("fk_album_artists_artists_artist_id");
                 });
 
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.FavoriteAlbum", b =>
+                {
+                    b.HasOne("MusicRUs.API.Models.Entities.Album", "Album")
+                        .WithMany()
+                        .HasForeignKey("AlbumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_favorite_albums_albums_album_id");
+
+                    b.HasOne("MusicRUs.API.Models.Entities.ForumProfile", "Profile")
+                        .WithMany("FavoriteAlbums")
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_favorite_albums_forum_profile_profile_id");
+
+                    b.Navigation("Album");
+
+                    b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.FavoriteArtist", b =>
+                {
+                    b.HasOne("MusicRUs.API.Models.Entities.Artist", "Artist")
+                        .WithMany()
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_favorite_artists_artists_artist_id");
+
+                    b.HasOne("MusicRUs.API.Models.Entities.ForumProfile", "Profile")
+                        .WithMany("FavoriteArtists")
+                        .HasForeignKey("ProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_favorite_artists_forum_profile_profile_id");
+
+                    b.Navigation("Artist");
+
+                    b.Navigation("Profile");
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.ForumProfile", b =>
+                {
+                    b.HasOne("MusicRUs.API.Models.Entities.User", "User")
+                        .WithOne("Profile")
+                        .HasForeignKey("MusicRUs.API.Models.Entities.ForumProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_forum_profiles_users_user_id");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Track", b =>
                 {
                     b.HasOne("MusicRUs.API.Models.Entities.Album", "Album")
@@ -341,6 +511,18 @@ namespace MusicRUs.API.Data.Migrations
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Album", b =>
                 {
                     b.Navigation("Tracks");
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.ForumProfile", b =>
+                {
+                    b.Navigation("FavoriteAlbums");
+
+                    b.Navigation("FavoriteArtists");
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.User", b =>
+                {
+                    b.Navigation("Profile");
                 });
 #pragma warning restore 612, 618
         }

@@ -30,5 +30,6 @@ public class AlbumConfiguration : IEntityTypeConfiguration<Album>
             .WithOne(t => t.Album)
             .HasForeignKey(t => t.AlbumId)
             .OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(a => a.Title).HasMethod("gin").HasOperators("gin_trgm_ops"); // Trigram index for fast ILIKE '%text%' search on album title
     }
 }
