@@ -9,10 +9,12 @@ namespace MusicRUs.API.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IForumProfileService _fpService;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IForumProfileService fpService)
     {
         _userService = userService;
+        _fpService = fpService;
     }
 
     // Implement the endpoints for user-related operations
@@ -24,6 +26,7 @@ public class UserController : ControllerBase
     public async Task<ActionResult<UserResponseDto?>> CreateUser([FromBody] CreateUserDto dto)
     {
         var user = await _userService.CreateUserAsync(dto);
+        var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
         if (user is null)
         {
             return Conflict("User with the same email or username already exists.");

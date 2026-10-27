@@ -1,10 +1,14 @@
 using MusicRUs.API.DTOs;
+using MusicRUs.API.Backend.Logic.GoogleAuth;
 
 namespace MusicRUs.API.Services.Interfaces;
 
 public interface IUserService
 {
     Task<UserResponseDto?> CreateUserAsync(CreateUserDto dto); // CREATE
+    
+    // GOOGLE LOGIN
+    Task<UserResponseDto?> GoogleLoginAsync(GoogleUserInfo googleUser); // CREATE, READ or UPDATE
     Task<UserResponseDto?> GetUserByIdAsync(int id); // READ
     Task<UserResponseDto?> GetUserByUsernameAndPasswordAsync(string username, string password); // READ
     Task<UserResponseDto?> GetUserByEmailAndPasswordAsync(string email, string password); // READ

@@ -7,6 +7,7 @@ public interface IUserRepository : IRepository<User>
 {
     Task<User?> GetUserByUsernameAsync(string username);
     Task<User?> GetUserByEmailAsync(string email);
+    Task<User?> GetByGoogleIdAsync(string googleId); // Get user by Google ID
     Task<IEnumerable<User>> SearchUsersByKeywordAsync(string keyword); // search users by username keyword
     Task<bool> EmailExistsAsync(string email);
     Task<bool> UsernameExistsAsync(string username);

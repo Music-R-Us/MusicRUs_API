@@ -1,4 +1,5 @@
 using MusicRUs.API.DTOs;
+using MusicRUs.API.Backend.Logic.GoogleAuth;
 using MusicRUs.API.Models.Entities;
 using MusicRUs.API.Repositories.Interfaces;
 using MusicRUs.API.Services.Interfaces;
@@ -29,6 +30,39 @@ public class UserService : IUserService
             Username = dto.Username,
             Email = dto.Email,
             PasswordHash = dto.Password,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        await _userRepo.AddAsync(user);
+        await _userRepo.SaveChangesAsync();
+        return MapToDto(user);
+    }
+
+    public async Task<UserResponseDto?> GoogleLoginAsync(GoogleUserInfo googleUser) // CREATE, READ or UPDATE
+    {
+        // Check if user exists and return existing user
+        var user = await _userRepo.GetByGoogleIdAsync(googleUser.GoogleId);
+        if (user is not null) 
+        {
+            return MapToDto(user); 
+        }
+
+        // Check if user exists via email and return existing user
+        user = await _userRepo.GetUserByEmailAsync(googleUser.Email);
+        if (user is not null)
+        {
+            user.GoogleId = googleUser.GoogleId; // Link Google ID to existing user
+            await _userRepo.SaveChangesAsync();
+            return MapToDto(user);
+        }
+
+        // Create new user if not found
+        user = new User
+        {
+            Username = googleUser.Name,
+            Email = googleUser.Email,
+            PasswordHash = null, // No password for Google login
+            GoogleId = googleUser.GoogleId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -71,7 +105,7 @@ public class UserService : IUserService
 
     public async Task<UserResponseDto?> UpdateUsernameAsync(int id, UpdateUsernameDto dto) // UPDATE
     {
-        var user = await _userRepo.GetByIdAsync(id);
+        var user = await _userRepo.GetByIdAsync(id); 
         if (user is null)
         {
             return null; // User not found

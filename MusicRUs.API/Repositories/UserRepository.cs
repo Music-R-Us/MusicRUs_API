@@ -12,6 +12,9 @@ public class UserRepository : Repository<User>, IUserRepository
     public async Task<User?> GetUserByUsernameAsync(string username)
         => await _dbSet.FirstOrDefaultAsync(u => u.Username == username);
 
+    public async Task<User?> GetByGoogleIdAsync(string googleId)
+        => await _dbSet.FirstOrDefaultAsync(u => u.GoogleId == googleId);
+
     public async Task<User?> GetUserByEmailAsync(string email)
         => await _dbSet.FirstOrDefaultAsync(u => u.Email == email); 
     
