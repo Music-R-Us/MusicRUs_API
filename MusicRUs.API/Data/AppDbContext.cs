@@ -12,13 +12,17 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     
     // Artists and Albums (step 2)
-    public DbSet<Artist> Artists => Set<Artist>();
-    public DbSet<Album> Albums => Set<Album>();
-    public DbSet<Track> Tracks => Set<Track>();
+    public DbSet<Artist> Artists => Set<Artist>(); // Artists in the system
+    public DbSet<Album> Albums => Set<Album>(); // Albums of artists
+    public DbSet<Track> Tracks => Set<Track>(); // Tracks of albums
+
     // Profiles (step 4)
-    public DbSet<ForumProfile> ForumProfiles => Set<ForumProfile>();
-    public DbSet<FavoriteArtist> FavoriteArtists => Set<FavoriteArtist>();
-    public DbSet<FavoriteAlbum> FavoriteAlbums => Set<FavoriteAlbum>();
+    public DbSet<ForumProfile> ForumProfiles => Set<ForumProfile>(); // Forum profiles of users
+    public DbSet<FavoriteArtist> FavoriteArtists => Set<FavoriteArtist>(); // Favorite artists of users
+    public DbSet<FavoriteAlbum> FavoriteAlbums => Set<FavoriteAlbum>(); // Favorite albums of users
+    
+    // Music Collections (step 5)
+    public DbSet<MusicCollection> MusicCollections => Set<MusicCollection>(); // Music collections of users
 
     
     protected override void OnModelCreating(ModelBuilder modelBuilder) 
