@@ -25,10 +25,12 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IReadRepository<>), typeof(Repository<>)); 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IForumProfileRepository, ForumProfileRepository>();
+builder.Services.AddScoped<IMusicCollectionRepository, MusicCollectionRepository>();
 
 // Services (Registering services for Dependency Injection)
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IForumProfileService, ForumProfileService>();
+builder.Services.AddScoped<IMusicCollectionService, MusicCollectionService>();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("MusicRUs")
