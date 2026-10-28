@@ -24,6 +24,9 @@ public class AppDbContext : DbContext
     // Music Collections (step 5)
     public DbSet<MusicCollection> MusicCollections => Set<MusicCollection>(); // Music collections of users
 
+    // Genres (step 6)
+    public DbSet<Genre> Genres => Set<Genre>(); // Music genres in the system
+
     
     protected override void OnModelCreating(ModelBuilder modelBuilder) 
     {

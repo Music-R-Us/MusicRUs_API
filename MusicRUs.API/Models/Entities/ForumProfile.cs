@@ -24,4 +24,5 @@ public class ForumProfile : IHasTimestamps
 
     public List<FavoriteArtist> FavoriteArtists { get; } = [];
     public List<FavoriteAlbum> FavoriteAlbums { get; } = [];
+    public List<Genre> Genres { get; set; } = [];
 }
