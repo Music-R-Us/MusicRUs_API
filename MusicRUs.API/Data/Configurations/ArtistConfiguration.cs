@@ -27,5 +27,8 @@ public class ArtistConfiguration : IEntityTypeConfiguration<Artist>
                j.ToTable("artist_genres"); // Map the join entity to the "artist_genres" table
                j.HasKey(x => new { x.ArtistId, x.GenreId }); // Set the composite primary key for the join entity
            });
+           
+           builder.Property(a => a.TicketmasterId).HasMaxLength(50); // Ticketmaster's ID for the artist
+           builder.HasIndex(a => a.TicketmasterId).IsUnique(); // Ensure TicketmasterId is unique
     }
 }
