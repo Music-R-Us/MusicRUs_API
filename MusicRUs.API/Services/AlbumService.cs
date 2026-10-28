@@ -1,0 +1,109 @@
+using MusicRUs.API.DTOs;
+using MusicRUs.API.Models.Entities;
+using MusicRUs.API.Repositories.Interfaces;
+using MusicRUs.API.Services.Interfaces;
+
+namespace MusicRUs.API.Services;
+
+public class AlbumService : IAlbumService
+{
+    private readonly IAlbumRepository _albumRepo;
+
+    public AlbumService(IAlbumRepository albumRepo)
+    {
+        _albumRepo = albumRepo;
+    }
+
+    // Implement the methods defined in IAlbumService here
+    public async Task<AlbumDetailsResponseDto?> GetAlbumByIdAsync(int id) // READ
+    {
+        var album = await _albumRepo.GetByIdAsync(id); // Overriden to include artists and tracks
+        if(album == null)
+            return null;
+        
+        return MapToDetailsDto(album);
+    }
+
+    public async Task<AlbumDetailsResponseDto?> GetAlbumBySpotifyIdAsync(string spotifyId) // READ
+    {
+        var album = await _albumRepo.GetAlbumWithDetailsBySpotifyIdAsync(spotifyId);
+        if(album == null)
+            return null;
+        
+        return MapToDetailsDto(album);
+    }
+
+    public async Task<AlbumDetailsResponseDto?> GetAlbumByTitleAsync(string title) // READ
+    {
+        var album = await _albumRepo.GetAlbumWithDetailsByTitleAsync(title);
+        if(album == null)
+            return null;
+
+        return MapToDetailsDto(album);
+    } 
+
+    public async Task<IEnumerable<AlbumResponseDto>> GetAlbumsByArtistIdAsync(int artistId) // READ
+    {
+        var albums = await _albumRepo.GetAllAlbumsByArtistIdAsync(artistId);
+        return albums.Select(MapToDto).ToList();
+    }
+
+    public async Task<IEnumerable<AlbumResponseDto>> SearchAlbumsByKeywordAsync(string keyword) // READ
+    {
+        var albums = await _albumRepo.SearchAlbumsByKeywordAsync(keyword);
+        return albums.Select(MapToDto).ToList();
+    }
+
+
+    //#########################################
+
+    // Helper methods to map Album entity to AlbumResponseDto / AlbumDetailsResponseDto 
+    private static T MapAlbum<T>(Album album) where T : AlbumResponseDto, new() => new() 
+    {
+        Id = album.Id,
+        SpotifyId = album.SpotifyId,
+        Title = album.Title,
+        AlbumType = album.AlbumType,
+        ReleaseDate = album.ReleaseDate,
+        TotalTracks = album.TotalTracks,
+        ImageUrl = album.ImageUrl,
+        SpotifyUrl = album.SpotifyUrl,
+        Artists = album.Artists.Select(MapArtist).ToList()
+    };
+
+    private static AlbumResponseDto MapToDto(Album album) // Album with artists
+        => MapAlbum<AlbumResponseDto>(album);
+
+    private static AlbumDetailsResponseDto MapToDetailsDto(Album album) // Album with artists and tracks
+    {
+        var dto = MapAlbum<AlbumDetailsResponseDto>(album); 
+        dto.Tracks = album.Tracks
+            .OrderBy(t => t.DiscNumber).ThenBy(t => t.TrackNumber)
+            .Select(MapTrack)
+            .ToList();
+        return dto;
+    }
+   
+    private static ArtistResponseDto MapArtist(Artist artist) => new()
+    {
+        Id = artist.Id,
+        SpotifyId = artist.SpotifyId,
+        Name = artist.Name,
+        ImageUrl = artist.ImageUrl,
+        SpotifyUrl = artist.SpotifyUrl
+    };
+
+    
+    private static TrackResponseDto MapTrack(Track track) => new()
+    {
+        Id = track.Id,
+        SpotifyId = track.SpotifyId,
+        Title = track.Title,
+        TrackNumber = track.TrackNumber,
+        DiscNumber = track.DiscNumber,
+        DurationMs = track.DurationMs,
+        Explicit = track.Explicit,
+        SpotifyUrl = track.SpotifyUrl,
+        Artists = track.Artists.Select(MapArtist).ToList()
+    };
+}

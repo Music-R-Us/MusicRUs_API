@@ -16,6 +16,7 @@ namespace MusicRUs.API.Repositories.Interfaces
     {
         Task<T?> GetByIdAsync(int id); // Get entity by ID
         Task<IEnumerable<T>> GetAllAsync(); // Get all entities
+        Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(int page, int pageSize); // Get paginated entities
         Task<IEnumerable<T>> SearchAsync(Expression<Func<T, bool>> predicate); // Search entities by predicate
     }
 }
