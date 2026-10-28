@@ -144,6 +144,11 @@ namespace MusicRUs.API.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("spotify_url");
 
+                    b.Property<string>("TicketmasterId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("ticketmaster_id");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -160,6 +165,10 @@ namespace MusicRUs.API.Data.Migrations
                     b.HasIndex("SpotifyId")
                         .IsUnique()
                         .HasDatabaseName("ix_artists_spotify_id");
+
+                    b.HasIndex("TicketmasterId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_artists_ticketmaster_id");
 
                     b.ToTable("artists", (string)null);
                 });
@@ -181,6 +190,57 @@ namespace MusicRUs.API.Data.Migrations
                         .HasDatabaseName("ix_artist_genres_genre_id");
 
                     b.ToTable("artist_genres", (string)null);
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.ArtistSubscription", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("integer")
+                        .HasColumnName("artist_id");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("CountryCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character(2)")
+                        .HasColumnName("country_code")
+                        .IsFixedLength();
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("NotifyEmail")
+                        .HasColumnType("boolean")
+                        .HasColumnName("notify_email");
+
+                    b.Property<bool>("NotifyFeed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("notify_feed");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("region");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("UserId", "ArtistId")
+                        .HasName("pk_artist_subscriptions");
+
+                    b.HasIndex("ArtistId")
+                        .HasDatabaseName("ix_artist_subscriptions_artist_id");
+
+                    b.ToTable("artist_subscriptions", (string)null);
                 });
 
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Comment", b =>
@@ -226,6 +286,86 @@ namespace MusicRUs.API.Data.Migrations
                         {
                             t.HasCheckConstraint("ck_comments_not_empty", "char_length(btrim(content)) > 0");
                         });
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.Concert", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("integer")
+                        .HasColumnName("artist_id");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("CountryCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character(2)")
+                        .HasColumnName("country_code")
+                        .IsFixedLength();
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("external_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("region");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("starts_at");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("text")
+                        .HasColumnName("url");
+
+                    b.Property<string>("VenueName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("venue_name");
+
+                    b.Property<string>("VenueTimeZone")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("venue_time_zone");
+
+                    b.HasKey("Id")
+                        .HasName("pk_concerts");
+
+                    b.HasIndex("ArtistId", "ExternalId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_concerts_artist_id_external_id");
+
+                    b.HasIndex("ArtistId", "StartsAt")
+                        .HasDatabaseName("ix_concerts_artist_id_starts_at");
+
+                    b.ToTable("concerts", (string)null);
                 });
 
             modelBuilder.Entity("MusicRUs.API.Models.Entities.FavoriteAlbum", b =>
@@ -697,6 +837,27 @@ namespace MusicRUs.API.Data.Migrations
                         .HasConstraintName("fk_artist_genres_genres_genre_id");
                 });
 
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.ArtistSubscription", b =>
+                {
+                    b.HasOne("MusicRUs.API.Models.Entities.Artist", "Artist")
+                        .WithMany()
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_artist_subscriptions_artists_artist_id");
+
+                    b.HasOne("MusicRUs.API.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_artist_subscriptions_users_user_id");
+
+                    b.Navigation("Artist");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Comment", b =>
                 {
                     b.HasOne("MusicRUs.API.Models.Entities.ForumPost", "Post")
@@ -716,6 +877,18 @@ namespace MusicRUs.API.Data.Migrations
                     b.Navigation("Post");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.Concert", b =>
+                {
+                    b.HasOne("MusicRUs.API.Models.Entities.Artist", "Artist")
+                        .WithMany("Concerts")
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_concerts_artists_artist_id");
+
+                    b.Navigation("Artist");
                 });
 
             modelBuilder.Entity("MusicRUs.API.Models.Entities.FavoriteAlbum", b =>
@@ -895,6 +1068,11 @@ namespace MusicRUs.API.Data.Migrations
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Album", b =>
                 {
                     b.Navigation("Tracks");
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.Artist", b =>
+                {
+                    b.Navigation("Concerts");
                 });
 
             modelBuilder.Entity("MusicRUs.API.Models.Entities.ForumPost", b =>

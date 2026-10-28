@@ -31,6 +31,10 @@ public class AppDbContext : DbContext
     public DbSet<Comment> Comments => Set<Comment>(); // Comments on forum posts
     public DbSet<ForumPost> ForumPosts => Set<ForumPost>(); // Forum posts in the system
 
+    // Artist Subscriptions (step 8)
+    public DbSet<Concert> Concerts => Set<Concert>(); // Concerts in the system
+    public DbSet<ArtistSubscription> ArtistSubscriptions => Set<ArtistSubscription>(); // Artist subscriptions of users
+
 
     
     protected override void OnModelCreating(ModelBuilder modelBuilder) 

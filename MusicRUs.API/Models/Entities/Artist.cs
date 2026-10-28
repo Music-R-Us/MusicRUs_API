@@ -17,4 +17,6 @@ public class Artist : IHasTimestamps
     public List<Album> Albums { get; } = []; // List of albums associated with the artist
     public List<Track> Tracks { get; } = []; // List of tracks associated with the artist
     public List<Genre> Genres { get; set; } = []; // List of genres associated with the artist
+    public string? TicketmasterId { get; set; } // Ticketmaster's ID for the artist
+    public List<Concert> Concerts { get; set; } = []; // List of concerts associated with the artist
 }
