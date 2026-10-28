@@ -26,11 +26,11 @@ public class UserController : ControllerBase
     public async Task<ActionResult<UserResponseDto?>> CreateUser([FromBody] CreateUserDto dto)
     {
         var user = await _userService.CreateUserAsync(dto);
-        var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
         if (user is null)
         {
             return Conflict("User with the same email or username already exists.");
         }
+        var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
         return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
     }
 

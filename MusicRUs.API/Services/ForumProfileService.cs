@@ -7,16 +7,16 @@ namespace MusicRUs.API.Services;
 
 public class ForumProfileService : IForumProfileService
 {
-    private readonly IForumProfileRepository _fpRepository;
+    private readonly IForumProfileRepository _fpRepo;
 
     public ForumProfileService(IForumProfileRepository fpRepository)
     {
-        _fpRepository = fpRepository;
+        _fpRepo = fpRepository;
     }
 
     public async Task<ForumProfileResponseDto?> CreateFpAsync(CreateForumProfileDto dto) // CREATE
     {
-        var existingProfile = await _fpRepository.GetFpByUserIdAsync(dto.UserId);
+        var existingProfile = await _fpRepo.GetFpByUserIdAsync(dto.UserId);
         if (existingProfile != null)
             return null;
         
@@ -25,14 +25,14 @@ public class ForumProfileService : IForumProfileService
             UserId = dto.UserId
         };
 
-        await _fpRepository.AddAsync(fp);
-        await _fpRepository.SaveChangesAsync();
+        await _fpRepo.AddAsync(fp);
+        await _fpRepo.SaveChangesAsync();
         return MapToDto(fp);
     }
 
     public async Task<ForumProfileResponseDto?> GetFpByUserIdAsync(int userId) // READ
     {
-        var fp = await _fpRepository.GetFpByUserIdAsync(userId);
+        var fp = await _fpRepo.GetFpByUserIdAsync(userId);
         if (fp == null)
             return null;
         
@@ -42,13 +42,13 @@ public class ForumProfileService : IForumProfileService
     // Search profiles by displayname keyword
     public async Task<IEnumerable<ForumProfileResponseDto>> SearchFpByKeywordAsync(string keyword) // READ
     {
-        var fp = await _fpRepository.SearchFpByKeywordAsync(keyword);
+        var fp = await _fpRepo.SearchFpByKeywordAsync(keyword);
         return fp.Select(MapToDto);
     }
 
     public async Task<ForumProfileResponseDto?> UpdateFpAsync(int userId, ForumProfileUpdatedDto dto)
     {
-        var fp = await _fpRepository.GetFpByUserIdAsync(userId);
+        var fp = await _fpRepo.GetFpByUserIdAsync(userId);
         if(fp == null)
             return null;
         
@@ -60,7 +60,7 @@ public class ForumProfileService : IForumProfileService
         fp.IsPublic = dto.IsPublic ?? fp.IsPublic;
         fp.UpdatedAt = DateTime.UtcNow;
 
-        await _fpRepository.SaveChangesAsync();
+        await _fpRepo.SaveChangesAsync();
         return MapToDto(fp);
     }
 
