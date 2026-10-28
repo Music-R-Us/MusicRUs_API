@@ -27,6 +27,11 @@ public class AppDbContext : DbContext
     // Genres (step 6)
     public DbSet<Genre> Genres => Set<Genre>(); // Music genres in the system
 
+    // Comments (step 7)
+    public DbSet<Comment> Comments => Set<Comment>(); // Comments on forum posts
+    public DbSet<ForumPost> ForumPosts => Set<ForumPost>(); // Forum posts in the system
+
+
     
     protected override void OnModelCreating(ModelBuilder modelBuilder) 
     {

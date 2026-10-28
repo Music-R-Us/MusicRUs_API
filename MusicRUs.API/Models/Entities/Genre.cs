@@ -11,4 +11,5 @@ public class Genre
  
     public List<Artist> Artists { get; set; } = []; // The list of artists associated with this genre
     public List<ForumProfile> Profiles { get; set; } = []; // The list of forum profiles associated with this genre
+    public List<ForumPost> Posts { get; set; } = []; // The list of forum posts associated with this genre
 }
