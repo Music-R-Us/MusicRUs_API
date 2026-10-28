@@ -6,11 +6,14 @@ using MusicRUs.API.Services.Interfaces;
 using MusicRUs.API.Repositories;
 using MusicRUs.API.Repositories.Interfaces;
 using MusicRUs.API.Data.Interceptors;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -26,11 +29,15 @@ builder.Services.AddScoped(typeof(IReadRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IForumProfileRepository, ForumProfileRepository>();
 builder.Services.AddScoped<IMusicCollectionRepository, MusicCollectionRepository>();
+builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
+
 
 // Services (Registering services for Dependency Injection)
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IForumProfileService, ForumProfileService>();
 builder.Services.AddScoped<IMusicCollectionService, MusicCollectionService>();
+builder.Services.AddScoped<IAlbumService, AlbumService>();
+
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("MusicRUs")
