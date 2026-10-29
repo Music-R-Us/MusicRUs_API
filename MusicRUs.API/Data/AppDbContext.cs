@@ -34,6 +34,11 @@ public class AppDbContext : DbContext
     public DbSet<Concert> Concerts => Set<Concert>();
     public DbSet<ArtistSubscription> ArtistSubscriptions => Set<ArtistSubscription>();
 
+    // Friendships, User Blocks, and Messages (step 11)
+    public DbSet<Friendship> Friendships => Set<Friendship>();
+    public DbSet<UserBlock> UserBlocks => Set<UserBlock>();
+    public DbSet<Message> Messages => Set<Message>();
+
 
     
     protected override void OnModelCreating(ModelBuilder modelBuilder) 

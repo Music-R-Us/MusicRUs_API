@@ -541,6 +541,52 @@ namespace MusicRUs.API.Data.Migrations
                     b.ToTable("forum_profiles", (string)null);
                 });
 
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.Friendship", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AddresseeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("addressee_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("RequesterId")
+                        .HasColumnType("integer")
+                        .HasColumnName("requester_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_friendships");
+
+                    b.HasIndex("AddresseeId")
+                        .HasDatabaseName("ix_friendships_addressee_id");
+
+                    b.HasIndex("RequesterId")
+                        .HasDatabaseName("ix_friendships_requester_id");
+
+                    b.ToTable("friendships", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_friendships_not_self", "requester_id <> addressee_id");
+                        });
+                });
+
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Genre", b =>
                 {
                     b.Property<int>("Id")
@@ -564,6 +610,57 @@ namespace MusicRUs.API.Data.Migrations
                         .HasDatabaseName("ix_genres_name");
 
                     b.ToTable("genres", (string)null);
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.Message", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("read_at");
+
+                    b.Property<int>("RecipientId")
+                        .HasColumnType("integer")
+                        .HasColumnName("recipient_id");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("sender_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_messages");
+
+                    b.HasIndex("RecipientId", "CreatedAt")
+                        .HasDatabaseName("ix_messages_recipient_id_created_at");
+
+                    b.HasIndex("SenderId", "RecipientId", "CreatedAt")
+                        .HasDatabaseName("ix_messages_sender_id_recipient_id_created_at");
+
+                    b.ToTable("messages", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_messages_not_empty", "char_length(btrim(content)) > 0");
+
+                            t.HasCheckConstraint("ck_messages_not_self", "sender_id <> recipient_id");
+                        });
                 });
 
             modelBuilder.Entity("MusicRUs.API.Models.Entities.MusicCollection", b =>
@@ -803,6 +900,36 @@ namespace MusicRUs.API.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.UserBlock", b =>
+                {
+                    b.Property<int>("BlockerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("blocker_id");
+
+                    b.Property<int>("BlockedId")
+                        .HasColumnType("integer")
+                        .HasColumnName("blocked_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("BlockerId", "BlockedId")
+                        .HasName("pk_user_blocks");
+
+                    b.HasIndex("BlockedId")
+                        .HasDatabaseName("ix_user_blocks_blocked_id");
+
+                    b.ToTable("user_blocks", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_user_blocks_not_self", "blocker_id <> blocked_id");
+                        });
+                });
+
             modelBuilder.Entity("MusicRUs.API.Models.Entities.AlbumArtist", b =>
                 {
                     b.HasOne("MusicRUs.API.Models.Entities.Album", null)
@@ -981,6 +1108,48 @@ namespace MusicRUs.API.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.Friendship", b =>
+                {
+                    b.HasOne("MusicRUs.API.Models.Entities.User", "Addressee")
+                        .WithMany()
+                        .HasForeignKey("AddresseeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_friendships_users_addressee_id");
+
+                    b.HasOne("MusicRUs.API.Models.Entities.User", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_friendships_users_requester_id");
+
+                    b.Navigation("Addressee");
+
+                    b.Navigation("Requester");
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.Message", b =>
+                {
+                    b.HasOne("MusicRUs.API.Models.Entities.User", "Recipient")
+                        .WithMany()
+                        .HasForeignKey("RecipientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_messages_users_recipient_id");
+
+                    b.HasOne("MusicRUs.API.Models.Entities.User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_messages_users_sender_id");
+
+                    b.Navigation("Recipient");
+
+                    b.Navigation("Sender");
+                });
+
             modelBuilder.Entity("MusicRUs.API.Models.Entities.MusicCollection", b =>
                 {
                     b.HasOne("MusicRUs.API.Models.Entities.Album", "Album")
@@ -1063,6 +1232,27 @@ namespace MusicRUs.API.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_track_artists_tracks_track_id");
+                });
+
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.UserBlock", b =>
+                {
+                    b.HasOne("MusicRUs.API.Models.Entities.User", "Blocked")
+                        .WithMany()
+                        .HasForeignKey("BlockedId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_blocks_users_blocked_id");
+
+                    b.HasOne("MusicRUs.API.Models.Entities.User", "Blocker")
+                        .WithMany()
+                        .HasForeignKey("BlockerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_blocks_users_blocker_id");
+
+                    b.Navigation("Blocked");
+
+                    b.Navigation("Blocker");
                 });
 
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Album", b =>
