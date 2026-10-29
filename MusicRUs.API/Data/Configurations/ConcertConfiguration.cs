@@ -6,24 +6,24 @@ namespace MusicRUs.API.Data.Configurations;
 
 public class ConcertConfiguration : IEntityTypeConfiguration<Concert>
 {
-    // Configures the Concert entity for the database schema.
+    // Configuration for the Concert entity, including table mapping, property constraints, and relationships.
     public void Configure(EntityTypeBuilder<Concert> builder)
     {
-        builder.ToTable("concerts"); // Maps the Concert entity to the "concerts" table in the database
+        builder.ToTable("concerts"); 
 
-        builder.Property(c => c.ExternalId).HasMaxLength(50); // Sets the maximum length for the ExternalId column
-        builder.Property(c => c.Name).HasMaxLength(255); // Sets the maximum length for the Name column
-        builder.Property(c => c.VenueName).HasMaxLength(255); // Sets the maximum length for the VenueName column
-        builder.Property(c => c.City).HasMaxLength(100); // Sets the maximum length for the City column
-        builder.Property(c => c.Region).HasMaxLength(100); // Sets the maximum length for the Region column
-        builder.Property(c => c.CountryCode).HasMaxLength(2).IsFixedLength(); // Sets the maximum length and fixed length for the CountryCode column
-        builder.Property(c => c.VenueTimeZone).HasMaxLength(64); // Sets the maximum length for the VenueTimeZone column
+        builder.Property(c => c.ExternalId).HasMaxLength(50);
+        builder.Property(c => c.Name).HasMaxLength(255);
+        builder.Property(c => c.VenueName).HasMaxLength(255);
+        builder.Property(c => c.City).HasMaxLength(100);
+        builder.Property(c => c.Region).HasMaxLength(100);
+        builder.Property(c => c.CountryCode).HasMaxLength(2).IsFixedLength();
+        builder.Property(c => c.VenueTimeZone).HasMaxLength(64);
 
-        builder.HasIndex(c => new { c.ArtistId, c.StartsAt }); // Creates an index on ArtistId and StartsAt columns
+        builder.HasIndex(c => new { c.ArtistId, c.StartsAt });
         // Same event only once per artist. Empty external_id (test data) is allowed
-        builder.HasIndex(c => new { c.ArtistId, c.ExternalId }).IsUnique(); // Creates a unique index on ArtistId and ExternalId columns
+        builder.HasIndex(c => new { c.ArtistId, c.ExternalId }).IsUnique();
 
         builder.HasOne(c => c.Artist).WithMany(a => a.Concerts).HasForeignKey(c => c.ArtistId) 
-               .OnDelete(DeleteBehavior.Cascade); // Configures the foreign key relationship with the Artist entity and sets cascade delete behavior
+               .OnDelete(DeleteBehavior.Cascade); // cascade delete behavior
     }
 }

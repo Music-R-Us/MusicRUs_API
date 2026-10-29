@@ -8,19 +8,18 @@ public class Concert : IHasTimestamps
 {
     public int Id { get; set; }
 
-    public int ArtistId { get; set; }  // Foreign key to the associated artist
-    public Artist Artist { get; set; } = null!; // Navigation property to the associated artist
-
+    public int ArtistId { get; set; }  // Foreign key
+    public Artist Artist { get; set; } = null!;
     public string? ExternalId { get; set; } // External ID from the source system
-    public string Name { get; set; } = string.Empty; // Name of the concert
-    public string VenueName { get; set; } = string.Empty; // Name of the venue
-    public string? City { get; set; } // City where the concert takes place
-    public string? Region { get; set; } // Region or state of the concert location
-    public string? CountryCode { get; set; }  // Country code of the concert location
-    public DateTime StartsAt { get; set; } // Start time of the concert (UTC)
-    public string? VenueTimeZone { get; set; } // Time zone of the venue
-    public string? Url { get; set; }  // URL for the concert event
+    public string Name { get; set; } = string.Empty; 
+    public string VenueName { get; set; } = string.Empty;
+    public string? City { get; set; }
+    public string? Region { get; set; }
+    public string? CountryCode { get; set; }
+    public DateTime StartsAt { get; set; }
+    public string? VenueTimeZone { get; set; }
+    public string? Url { get; set; }
 
-    public DateTime CreatedAt { get; set; } // Timestamp when the concert record was created
-    public DateTime UpdatedAt { get; set; } // Timestamp when the concert record was last updated
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; } 
 }
