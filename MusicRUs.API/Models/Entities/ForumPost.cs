@@ -11,7 +11,7 @@ public class ForumPost : IHasTimestamps
     public int UserId { get; set; } // Foreign key
     public User User { get; set; } = null!;
 
-    public string Title { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty; 
     public string Content { get; set; } = string.Empty;
 
     public int? TrackId { get; set; } // Foreign key to the Track entity (optional)
