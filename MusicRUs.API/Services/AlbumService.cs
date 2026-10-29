@@ -84,7 +84,7 @@ public class AlbumService : IAlbumService
         return dto;
     }
    
-    private static ArtistResponseDto MapArtist(Artist artist) => new()
+    private static ArtistIncludeDto MapArtist(Artist artist) => new()
     {
         Id = artist.Id,
         SpotifyId = artist.SpotifyId,

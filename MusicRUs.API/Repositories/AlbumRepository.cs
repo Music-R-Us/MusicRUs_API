@@ -8,7 +8,7 @@ public class AlbumRepository : Repository<Album>, IAlbumRepository
 {
     public AlbumRepository(DbContext context) : base(context) {}
 
-    // Base query for albums with details included
+    // Private method for building a query for albums with details included
     private IQueryable<Album> IncludeDetails() => _dbSet 
         .AsNoTracking() // Ensures the query is read only
         .AsSplitQuery() // Avoids multiple joins in a single query

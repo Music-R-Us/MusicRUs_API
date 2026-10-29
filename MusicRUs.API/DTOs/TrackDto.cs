@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+
 
 namespace MusicRUs.API.DTOs;
 
@@ -15,5 +15,5 @@ public class TrackResponseDto //DTO for returning track information
     public int? DurationMs { get; set; } // Duration in milliseconds
     public bool Explicit { get; set; }
     public string? SpotifyUrl { get; set; }
-    public List<ArtistResponseDto> Artists { get; set; } = [];
+    public List<ArtistIncludeDto> Artists { get; set; } = [];
 }

@@ -36,6 +36,10 @@ namespace MusicRUs.API.Repositories
         // Get row by ID
         public virtual async Task<T?> GetByIdAsync(int id) => await _dbSet.FindAsync(id);
         
+        // Get row by string value
+        public virtual async Task<T?> GetByStringAsync(string value) 
+            => await _dbSet.FirstOrDefaultAsync(e => EF.Property<string>(e, "Value") == value); 
+        
         // Get all rows
         public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync(); 
 
@@ -51,7 +55,7 @@ namespace MusicRUs.API.Repositories
         }
 
         // Search rows by predicate (predicate is a condition to filter the rows)
-        public async Task<IEnumerable<T>> SearchAsync(Expression<Func<T, bool>> predicate)
+        public virtual async Task<IEnumerable<T>> SearchAsync(Expression<Func<T, bool>> predicate)
             => await _dbSet.Where(predicate).ToListAsync();
 
         // Add new row
