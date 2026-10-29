@@ -12,28 +12,27 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     
     // Artists and Albums (step 2)
-    public DbSet<Artist> Artists => Set<Artist>(); // Artists in the system
-    public DbSet<Album> Albums => Set<Album>(); // Albums of artists
-    public DbSet<Track> Tracks => Set<Track>(); // Tracks of albums
+    public DbSet<Artist> Artists => Set<Artist>();
+    public DbSet<Album> Albums => Set<Album>();
+    public DbSet<Track> Tracks => Set<Track>();
 
     // Profiles (step 4)
-    public DbSet<ForumProfile> ForumProfiles => Set<ForumProfile>(); // Forum profiles of users
-    public DbSet<FavoriteArtist> FavoriteArtists => Set<FavoriteArtist>(); // Favorite artists of users
-    public DbSet<FavoriteAlbum> FavoriteAlbums => Set<FavoriteAlbum>(); // Favorite albums of users
+    public DbSet<ForumProfile> ForumProfiles => Set<ForumProfile>();
+    public DbSet<FavoriteArtist> FavoriteArtists => Set<FavoriteArtist>();
+    public DbSet<FavoriteAlbum> FavoriteAlbums => Set<FavoriteAlbum>();
     
     // Music Collections (step 5)
-    public DbSet<MusicCollection> MusicCollections => Set<MusicCollection>(); // Music collections of users
+    public DbSet<MusicCollection> MusicCollections => Set<MusicCollection>();
 
     // Genres (step 6)
-    public DbSet<Genre> Genres => Set<Genre>(); // Music genres in the system
-
+    public DbSet<Genre> Genres => Set<Genre>();
     // Comments (step 7)
-    public DbSet<Comment> Comments => Set<Comment>(); // Comments on forum posts
-    public DbSet<ForumPost> ForumPosts => Set<ForumPost>(); // Forum posts in the system
+    public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<ForumPost> ForumPosts => Set<ForumPost>();
 
     // Artist Subscriptions (step 8)
-    public DbSet<Concert> Concerts => Set<Concert>(); // Concerts in the system
-    public DbSet<ArtistSubscription> ArtistSubscriptions => Set<ArtistSubscription>(); // Artist subscriptions of users
+    public DbSet<Concert> Concerts => Set<Concert>();
+    public DbSet<ArtistSubscription> ArtistSubscriptions => Set<ArtistSubscription>();
 
 
     

@@ -8,23 +8,22 @@ public class ForumPost : IHasTimestamps
 {
     public int Id { get; set; }
 
-    public int UserId { get; set; } // Foreign key to the User entity
-    public User User { get; set; } = null!; // Navigation property to the User entity
+    public int UserId { get; set; } // Foreign key
+    public User User { get; set; } = null!;
 
-    public string Title { get; set; } = string.Empty; // Title of the forum post
-    public string Content { get; set; } = string.Empty; // Content of the forum post
+    public string Title { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
 
-    // Valgfrit musiklink – højst ét kan vælges per entry
     public int? TrackId { get; set; } // Foreign key to the Track entity (optional)
-    public Track? Track { get; set; } // Navigation property to the Track entity
+    public Track? Track { get; set; }
     public int? AlbumId { get; set; } // Foreign key to the Album entity (optional)
-    public Album? Album { get; set; } // Navigation property to the Album entity
+    public Album? Album { get; set; }
     public int? ArtistId { get; set; } // Foreign key to the Artist entity (optional)
-    public Artist? Artist { get; set; } // Navigation property to the Artist entity
+    public Artist? Artist { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public List<Comment> Comments { get; set; } = []; // Comments associated with the forum post
-    public List<Genre> Genres { get; set; } = []; // Genres associated with the forum post
+    public List<Comment> Comments { get; set; } = [];
+    public List<Genre> Genres { get; set; } = [];
 }

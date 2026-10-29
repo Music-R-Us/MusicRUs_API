@@ -7,9 +7,9 @@ namespace MusicRUs.API.Models.Entities;
 public class Genre
 {
     public int Id { get; set; }
-    public string Name { get; set; } = string.Empty; // The name of the genre   
+    public string Name { get; set; } = string.Empty;
  
-    public List<Artist> Artists { get; set; } = []; // The list of artists associated with this genre
-    public List<ForumProfile> Profiles { get; set; } = []; // The list of forum profiles associated with this genre
-    public List<ForumPost> Posts { get; set; } = []; // The list of forum posts associated with this genre
+    public List<Artist> Artists { get; set; } = [];
+    public List<ForumProfile> Profiles { get; set; } = [];
+    public List<ForumPost> Posts { get; set; } = [];
 }

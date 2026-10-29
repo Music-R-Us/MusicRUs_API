@@ -17,30 +17,30 @@ public class ForumPostConfiguration : IEntityTypeConfiguration<ForumPost>
                 "num_nonnulls(track_id, album_id, artist_id) <= 1");
         });
 
-        builder.Property(p => p.Title).HasMaxLength(255).IsRequired(); // Title is required and has a max length of 255
+        builder.Property(p => p.Title).HasMaxLength(255).IsRequired();
         builder.HasIndex(p => p.CreatedAt); 
 
-        builder.HasOne(p => p.User).WithMany().HasForeignKey(p => p.UserId) // Configure the relationship with the User entity
+        builder.HasOne(p => p.User).WithMany().HasForeignKey(p => p.UserId) // many to one relationship
                .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(p => p.Track).WithMany().HasForeignKey(p => p.TrackId) // Configure the relationship with the Track entity
+        builder.HasOne(p => p.Track).WithMany().HasForeignKey(p => p.TrackId)
                .OnDelete(DeleteBehavior.SetNull);
-        builder.HasOne(p => p.Album).WithMany().HasForeignKey(p => p.AlbumId) // Configure the relationship with the Album entity
+        builder.HasOne(p => p.Album).WithMany().HasForeignKey(p => p.AlbumId)
                .OnDelete(DeleteBehavior.SetNull);
-        builder.HasOne(p => p.Artist).WithMany().HasForeignKey(p => p.ArtistId) // Configure the relationship with the Artist entity
+        builder.HasOne(p => p.Artist).WithMany().HasForeignKey(p => p.ArtistId)
                .OnDelete(DeleteBehavior.SetNull);
 
-        builder.HasMany(p => p.Genres) // Configure the many-to-many relationship with the Genre entity
-               .WithMany(g => g.Posts) // Configure the join entity for the many-to-many relationship
+        builder.HasMany(p => p.Genres) // many to many relationship
+               .WithMany(g => g.Posts) // many to many relationship
                .UsingEntity<PostGenre>(
-                   r => r.HasOne<Genre>().WithMany().HasForeignKey(x => x.GenreId) // Configure the relationship with the Genre entity in the join table
+                   r => r.HasOne<Genre>().WithMany().HasForeignKey(x => x.GenreId)
                          .OnDelete(DeleteBehavior.Restrict),
-                   l => l.HasOne<ForumPost>().WithMany().HasForeignKey(x => x.PostId) // Configure the relationship with the ForumPost entity in the join table
+                   l => l.HasOne<ForumPost>().WithMany().HasForeignKey(x => x.PostId)
                          .OnDelete(DeleteBehavior.Cascade),
                    j =>
                    {
-                       j.ToTable("post_genres"); // Configure the join table for the many-to-many relationship
-                       j.HasKey(x => new { x.PostId, x.GenreId }); // Configure the composite primary key for the join table
+                       j.ToTable("post_genres"); // join table many to many relationship
+                       j.HasKey(x => new { x.PostId, x.GenreId });
                    });
     }
 }

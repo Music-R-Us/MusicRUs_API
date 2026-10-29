@@ -8,14 +8,14 @@ public class AlbumConfiguration : IEntityTypeConfiguration<Album>
 {
     public void Configure(EntityTypeBuilder<Album> builder) 
     {
-        builder.ToTable("albums"); // Map the Album entity to the "albums" table
+        builder.ToTable("albums"); 
         builder.Property(a => a.SpotifyId).HasMaxLength(22); // Spotify's 22-character ID
         builder.HasIndex(a => a.SpotifyId).IsUnique(); // Ensure SpotifyId is unique
-        builder.Property(a => a.Title).HasMaxLength(255); // Album title with max length 255
-        builder.Property(a => a.AlbumType).HasConversion<string>().HasMaxLength(20); // Store AlbumType as string with max length 20
-        builder.Property(a => a.ReleaseDate).HasMaxLength(10); // Release date with max length 10 (YYYY-MM-DD)
+        builder.Property(a => a.Title).HasMaxLength(255); 
+        builder.Property(a => a.AlbumType).HasConversion<string>().HasMaxLength(20); 
+        builder.Property(a => a.ReleaseDate).HasMaxLength(10);
 
-        builder.HasMany(a => a.Artists) // Configure the many-to-many relationship between Album and Artist
+        builder.HasMany(a => a.Artists) // many to many relationship
             .WithMany(ar => ar.Albums)
             .UsingEntity<AlbumArtist>(
                 r => r.HasOne<Artist>().WithMany().HasForeignKey(x => x.ArtistId),
@@ -26,7 +26,7 @@ public class AlbumConfiguration : IEntityTypeConfiguration<Album>
                     j.ToTable("album_artists");
                 });
 
-        builder.HasMany(a => a.Tracks) // Configure the one-to-many relationship between Album and Track
+        builder.HasMany(a => a.Tracks) // one to many relationship
             .WithOne(t => t.Album)
             .HasForeignKey(t => t.AlbumId)
             .OnDelete(DeleteBehavior.Cascade);

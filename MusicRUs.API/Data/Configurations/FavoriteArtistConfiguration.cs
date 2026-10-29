@@ -12,9 +12,9 @@ public class FavoriteArtistConfiguration : IEntityTypeConfiguration<FavoriteArti
         builder.ToTable("favorite_artists");  
         builder.HasKey(f => new { f.ProfileId, f.ArtistId }); // Set the composite primary key for FavoriteArtist
 
-        builder.HasOne(f => f.Profile).WithMany(p => p.FavoriteArtists) // Configure the many-to-one relationship with ForumProfile
+        builder.HasOne(f => f.Profile).WithMany(p => p.FavoriteArtists) // many to one relationship
             .HasForeignKey(f => f.ProfileId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne(f => f.Artist).WithMany() // Configure the many-to-one relationship with Artist
+        builder.HasOne(f => f.Artist).WithMany() // many to one relationship
             .HasForeignKey(f => f.ArtistId).OnDelete(DeleteBehavior.Cascade);
     }
 }
