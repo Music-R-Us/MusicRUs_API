@@ -30,6 +30,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IForumProfileRepository, ForumProfileRepository>();
 builder.Services.AddScoped<IMusicCollectionRepository, MusicCollectionRepository>();
 builder.Services.AddScoped<IAlbumRepository, AlbumRepository>();
+builder.Services.AddScoped<IArtistRepository, ArtistRepository>();
 
 
 // Services (Registering services for Dependency Injection)
@@ -37,6 +38,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IForumProfileService, ForumProfileService>();
 builder.Services.AddScoped<IMusicCollectionService, MusicCollectionService>();
 builder.Services.AddScoped<IAlbumService, AlbumService>();
+builder.Services.AddScoped<IArtistService, ArtistService>();
 
 
 // Database

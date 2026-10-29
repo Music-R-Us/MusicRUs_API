@@ -15,6 +15,7 @@ namespace MusicRUs.API.Repositories.Interfaces
     public interface IReadRepository<T> where T : class
     {
         Task<T?> GetByIdAsync(int id); // Get entity by ID
+        Task<T?> GetByStringAsync(string value); // Get entity by string value
         Task<IEnumerable<T>> GetAllAsync(); // Get all entities
         Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(int page, int pageSize); // Get paginated entities
         Task<IEnumerable<T>> SearchAsync(Expression<Func<T, bool>> predicate); // Search entities by predicate
