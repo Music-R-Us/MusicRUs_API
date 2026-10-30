@@ -9,9 +9,15 @@ public class ForumProfileConfiguration : IEntityTypeConfiguration<ForumProfile>
     // Configures the ForumProfile entity, including table mapping, property constraints, and relationships.
     public void Configure(EntityTypeBuilder<ForumProfile> builder)
     {
-        builder.ToTable("forum_profiles");
+        builder.ToTable("forum_profiles", t =>
+        {
+            t.HasCheckConstraint("ck_forum_profiles_primary_color", "primary_color ~ '^#[0-9A-Fa-f]{6}$'");
+            t.HasCheckConstraint("ck_forum_profiles_accent_color", "accent_color ~ '^#[0-9A-Fa-f]{6}$'");
+        });
         builder.Property(p => p.DisplayName).HasMaxLength(100); 
         builder.Property(p => p.Location).HasMaxLength(255); 
+        builder.Property(p => p.PrimaryColor).HasMaxLength(7); 
+        builder.Property(p => p.AccentColor).HasMaxLength(7);
 
         builder.HasOne(p => p.User) // one to one relationship
             .WithOne(u => u.Profile) 
