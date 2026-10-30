@@ -14,6 +14,8 @@ public class ForumProfile : IHasTimestamps
     public string? AvatarUrl { get; set; }
     public string? Location { get; set; }
     public string? WebsiteUrl { get; set; }
+    public string? PrimaryColor { get; set; }
+    public string? AccentColor { get; set; }
 
     // Default set in C#, not with HasDefaultValue: EF never sends 'false' for a bool
     // with a database default, so the profile could never be made private.

@@ -20,6 +20,8 @@ public class ForumProfileResponseDto // Dto for returning forum profile data in 
     public string? AvatarUrl { get; set; } 
     public string? Location { get; set; }
     public string? WebsiteUrl { get; set; }
+    public string? PrimaryColor { get; set; }
+    public string? AccentColor { get; set; }
     public bool? IsPublic { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -32,6 +34,12 @@ public class ForumProfileUpdatedDto // DTO for updating forum profile data
     public string? AvatarUrl { get; set; }
     public string? Location { get; set; }
     public string? WebsiteUrl { get; set; }
+
+    [RegularExpression("^#[0-9A-Fa-f]{6}$", ErrorMessage = "Color must be in the format #RRGGBB.")]
+    public string? PrimaryColor { get; set; }
+
+    [RegularExpression("^#[0-9A-Fa-f]{6}$", ErrorMessage = "Color must be in the format #RRGGBB.")]
+    public string? AccentColor { get; set; }
     public bool? IsPublic { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
