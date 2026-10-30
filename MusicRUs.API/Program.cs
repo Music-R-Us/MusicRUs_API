@@ -20,7 +20,13 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
 // Google Auth
-builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection(GoogleAuthOptions.SectionName));
+builder.Services
+    .AddOptions<GoogleAuthOptions>()
+    .Bind(builder.Configuration.GetSection(GoogleAuthOptions.SectionName))
+    .Validate(options => !string.IsNullOrWhiteSpace(options.ClientId),
+        "GoogleAuth:ClientId is required.")
+    .ValidateOnStart();
+
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
 // Repositories (Registering repositories for Dependency Injection)

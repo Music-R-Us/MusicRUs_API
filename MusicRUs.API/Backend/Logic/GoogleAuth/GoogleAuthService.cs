@@ -6,10 +6,12 @@ namespace MusicRUs.API.Backend.Logic.GoogleAuth;
 public class GoogleAuthService : IGoogleAuthService
 {
     private readonly GoogleAuthOptions _options;
+    private readonly ILogger<GoogleAuthService> _logger;
 
-    public GoogleAuthService(IOptions<GoogleAuthOptions> options)
+    public GoogleAuthService(IOptions<GoogleAuthOptions> options, ILogger<GoogleAuthService> logger)
     {
         _options = options.Value;
+        _logger = logger;
     }
 
     public async Task<GoogleUserInfo?> VerifyIdTokenAsync(string idToken)
@@ -30,8 +32,9 @@ public class GoogleAuthService : IGoogleAuthService
                 Name = payload.Name ?? payload.GivenName
             };
         }
-        catch (InvalidJwtException)
+        catch (InvalidJwtException ex)
         {
+            _logger.LogWarning(ex, "Google ID token validation failed.");
             return null;
         }
     }
