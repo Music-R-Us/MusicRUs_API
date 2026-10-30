@@ -9,6 +9,11 @@ public class GenreRepository : Repository<Genre>, IGenreRepository
 {
     public GenreRepository(DbContext context) : base(context) {}
 
+    public async Task<List<Genre>> GetGenresByIdsAsync(IEnumerable<int> ids)
+        => await _dbSet
+            .Where(g => ids.Contains(g.Id))
+            .ToListAsync();
+
     public override async Task<Genre?> GetByStringAsync(string name)
         => await _dbSet.FirstOrDefaultAsync(g => g.Name == name);
 }

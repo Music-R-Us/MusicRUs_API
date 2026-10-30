@@ -62,6 +62,7 @@ public class ForumProfileService : IForumProfileService
         fp.IsPublic = dto.IsPublic ?? fp.IsPublic;
         fp.UpdatedAt = DateTime.UtcNow;
 
+        _fpRepo.Update(fp);
         await _fpRepo.SaveChangesAsync();
         return MapToDto(fp);
     }
