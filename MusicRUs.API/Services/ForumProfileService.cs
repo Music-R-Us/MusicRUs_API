@@ -57,6 +57,8 @@ public class ForumProfileService : IForumProfileService
         fp.AvatarUrl = dto.AvatarUrl ?? fp.AvatarUrl;
         fp.Location = dto.Location ?? fp.Location;
         fp.WebsiteUrl = dto.WebsiteUrl ?? fp.WebsiteUrl;
+        fp.PrimaryColor = dto.PrimaryColor?.ToUpperInvariant() ?? fp.PrimaryColor;
+        fp.AccentColor = dto.AccentColor?.ToUpperInvariant() ?? fp.AccentColor;
         fp.IsPublic = dto.IsPublic ?? fp.IsPublic;
         fp.UpdatedAt = DateTime.UtcNow;
 
@@ -76,6 +78,8 @@ public class ForumProfileService : IForumProfileService
         AvatarUrl = fp.AvatarUrl,
         Location = fp.Location,
         WebsiteUrl = fp.WebsiteUrl,
+        PrimaryColor = fp.PrimaryColor,
+        AccentColor = fp.AccentColor,
         IsPublic = fp.IsPublic,
         CreatedAt = fp.CreatedAt,
         UpdatedAt = fp.UpdatedAt

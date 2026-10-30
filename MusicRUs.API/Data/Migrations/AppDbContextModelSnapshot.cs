@@ -493,6 +493,11 @@ namespace MusicRUs.API.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AccentColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("accent_color");
+
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("text")
                         .HasColumnName("avatar_url");
@@ -519,6 +524,11 @@ namespace MusicRUs.API.Data.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("location");
 
+                    b.Property<string>("PrimaryColor")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("primary_color");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -538,7 +548,12 @@ namespace MusicRUs.API.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_forum_profiles_user_id");
 
-                    b.ToTable("forum_profiles", (string)null);
+                    b.ToTable("forum_profiles", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_forum_profiles_accent_color", "accent_color ~ '^#[0-9A-Fa-f]{6}$'");
+
+                            t.HasCheckConstraint("ck_forum_profiles_primary_color", "primary_color ~ '^#[0-9A-Fa-f]{6}$'");
+                        });
                 });
 
             modelBuilder.Entity("MusicRUs.API.Models.Entities.Friendship", b =>
