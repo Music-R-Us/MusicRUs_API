@@ -48,6 +48,7 @@ builder.Services.AddScoped<IMusicCollectionService, MusicCollectionService>();
 builder.Services.AddScoped<IAlbumService, AlbumService>();
 builder.Services.AddScoped<IArtistService, ArtistService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
+builder.Services.AddScoped<IForumPostService, ForumPostService>();
 
 
 // Database
