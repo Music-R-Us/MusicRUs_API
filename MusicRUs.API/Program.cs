@@ -7,6 +7,7 @@ using MusicRUs.API.Repositories;
 using MusicRUs.API.Repositories.Interfaces;
 using MusicRUs.API.Data.Interceptors;
 using System.Text.Json.Serialization;
+using MusicRUs.API.Backend.Logic.Spotify;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,16 @@ builder.Services
 
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
 
+// Spotify
+builder.Services.AddOptions<SpotifyOptions>()
+    .Bind(builder.Configuration.GetSection(SpotifyOptions.SectionName))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.ClientId) && !string.IsNullOrWhiteSpace(o.ClientSecret),
+        "Spotify:ClientId og Spotify:ClientSecret mangler i user-secrets eller miljøvariabler.")
+    .ValidateOnStart();
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<ISpotifyClient, SpotifyClient>(client =>
+    client.BaseAddress = new Uri("https://api.spotify.com/"));
+    
 // Repositories (Registering repositories for Dependency Injection)
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped(typeof(IReadRepository<>), typeof(Repository<>)); 
@@ -47,6 +58,8 @@ builder.Services.AddScoped<IForumProfileService, ForumProfileService>();
 builder.Services.AddScoped<IMusicCollectionService, MusicCollectionService>();
 builder.Services.AddScoped<IAlbumService, AlbumService>();
 builder.Services.AddScoped<IArtistService, ArtistService>();
+builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
+builder.Services.AddScoped<ICatalogImportService, CatalogImportService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IForumPostService, ForumPostService>();
 
