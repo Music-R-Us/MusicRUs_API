@@ -23,7 +23,7 @@ public class ForumPostController : ControllerBase
     //##############################################################################
     // Create ForumPost
     [HttpPost]
-    public async Task<IActionResult> CreateForumPost([FromBody] CreateForumPostDto dto)
+    public async Task<ActionResult<ForumPostResponseDto>> CreateForumPost([FromBody] CreateForumPostDto dto)
     {
         var user = await _userService.GetUserByIdAsync(dto.UserId);
         if (user == null)
@@ -39,7 +39,7 @@ public class ForumPostController : ControllerBase
     //##############################################################################
     // Get ForumPost by ID
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetForumPostById(int id)
+    public async Task<ActionResult<ForumPostResponseDto>> GetForumPostById(int id)
     {
         var fp = await _fpService.GetForumPostByIdAsync(id);
         if (fp == null)
@@ -50,7 +50,7 @@ public class ForumPostController : ControllerBase
 
     // Get ForumPosts by User ID
     [HttpGet("user/{userId:int}")]
-    public async Task<IActionResult> GetForumPostsByUserId(int userId)
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetForumPostsByUserId(int userId)
     {
         var user = await _userService.GetUserByIdAsync(userId);
         if (user == null)
@@ -62,7 +62,7 @@ public class ForumPostController : ControllerBase
 
     // Get ForumPosts by Tracks ID
     [HttpGet("track/{trackId:int}")]
-    public async Task<IActionResult> GetForumPostsByTrackId(int trackId)
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetForumPostsByTrackId(int trackId)
     {
         var fps = await _fpService.GetForumPostsByTrackIdAsync(trackId);
         if (fps == null)
@@ -73,7 +73,7 @@ public class ForumPostController : ControllerBase
 
     // Get ForumPosts by Album ID
     [HttpGet("album/{albumId:int}")]
-    public async Task<IActionResult> GetForumPostsByAlbumId(int albumId)
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetForumPostsByAlbumId(int albumId)
     {
         var fps = await _fpService.GetForumPostsByAlbumIdAsync(albumId);
         if (fps == null)
@@ -84,7 +84,7 @@ public class ForumPostController : ControllerBase
 
     // Get ForumPosts by Artist ID
     [HttpGet("artist/{artistId:int}")]
-    public async Task<IActionResult> GetForumPostsByArtistId(int artistId)
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetForumPostsByArtistId(int artistId)
     {
         var fps = await _fpService.GetForumPostsByArtistIdAsync(artistId);
         if (fps == null)
@@ -95,12 +95,38 @@ public class ForumPostController : ControllerBase
 
     // Get all ForumPosts
     [HttpGet]
-    public async Task<IActionResult> GetAllForumPosts()
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetAllForumPosts()
     {
         var fps = await _fpService.GetAllForumPostsAsync();
         if (fps == null)
             return NotFound();
 
         return Ok(fps);
+    }
+
+    // UPDATE
+    //##############################################################################
+    // Update ForumPost
+    [HttpPatch("updateForumPost/{id:int}")]
+    public async Task<ActionResult<ForumPostResponseDto?>> UpdateForumPost(int id, [FromBody] ForumPostUpdateDto dto)
+    {
+        var fp = await _fpService.UpdateForumPostAsync(id, dto);
+        if(fp == null)
+            return NotFound();
+
+        return Ok(fp);
+    }
+
+    // DELETE
+    //##############################################################################
+    // Delete ForumPost
+    [HttpDelete("deleteForumPost/{id:int}")]
+    public async Task<ActionResult> DeleteForumPost(int id)
+    {
+        var success = await _fpService.DeleteForumPostAsync(id);
+        if(!success)
+            return NotFound();
+
+        return NoContent(); 
     }
 }
