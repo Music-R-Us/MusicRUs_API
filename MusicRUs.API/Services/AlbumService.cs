@@ -8,15 +8,20 @@ namespace MusicRUs.API.Services;
 public class AlbumService : IAlbumService
 {
     private readonly IAlbumRepository _albumRepo;
+    private readonly ICatalogImportService _catalogImportService;
+    private readonly ILogger<AlbumService> _logger;
 
-    public AlbumService(IAlbumRepository albumRepo)
+    public AlbumService(IAlbumRepository albumRepo, ICatalogImportService catalogImportService, ILogger<AlbumService> logger)
     {
         _albumRepo = albumRepo;
+        _catalogImportService = catalogImportService;
+        _logger = logger;
     }
 
     // Implement the methods defined in IAlbumService here
     public async Task<AlbumDetailsResponseDto?> GetAlbumByIdAsync(int id) // READ
     {
+        await TryImportAsync(() => _catalogImportService.ImportAlbumTracksAsync(id)); // Fetch tracks from Spotify on first view
         var album = await _albumRepo.GetByIdAsync(id); // Overriden to include artists and tracks
         if(album == null)
             return null;
@@ -27,6 +32,11 @@ public class AlbumService : IAlbumService
     public async Task<AlbumDetailsResponseDto?> GetAlbumBySpotifyIdAsync(string spotifyId) // READ
     {
         var album = await _albumRepo.GetAlbumWithDetailsBySpotifyIdAsync(spotifyId);
+        if (album == null || album.Tracks.Count == 0)
+        {
+            await TryImportAsync(() => _catalogImportService.ImportAlbumAsync(spotifyId)); // Fetch from Spotify if missing
+            album = await _albumRepo.GetAlbumWithDetailsBySpotifyIdAsync(spotifyId);
+        }
         if(album == null)
             return null;
         
@@ -52,6 +62,18 @@ public class AlbumService : IAlbumService
     {
         var albums = await _albumRepo.SearchAlbumsByKeywordAsync(keyword);
         return albums.Select(MapToDto).ToList();
+    }
+
+    private async Task TryImportAsync(Func<Task> import)
+    {
+        try
+        {
+            await import();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _logger.LogWarning(ex, "Could not fetch album data from Spotify.");
+        }
     }
 
 
