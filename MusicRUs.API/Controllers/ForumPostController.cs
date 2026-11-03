@@ -25,14 +25,21 @@ public class ForumPostController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ForumPostResponseDto>> CreateForumPost([FromBody] CreateForumPostDto dto)
     {
-        var user = await _userService.GetUserByIdAsync(dto.UserId);
-        if (user == null)
+        try
         {
-            return NotFound($"User with ID {dto.UserId} not found.");
-        }
+            var user = await _userService.GetUserByIdAsync(dto.UserId);
+            if (user == null)
+            {
+                return NotFound($"User with ID {dto.UserId} not found.");
+            }
 
-        var fp = await _fpService.CreateForumPostAsync(dto);
-        return CreatedAtAction(nameof(GetForumPostById), new { id = fp.Id }, fp);
+            var fp = await _fpService.CreateForumPostAsync(dto);
+            return CreatedAtAction(nameof(GetForumPostById), new { id = fp.Id }, fp);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new {error = ex.Message});
+        }
     }
 
     // READ
@@ -110,11 +117,18 @@ public class ForumPostController : ControllerBase
     [HttpPatch("updateForumPost/{id:int}")]
     public async Task<ActionResult<ForumPostResponseDto?>> UpdateForumPost(int id, [FromBody] ForumPostUpdateDto dto)
     {
-        var fp = await _fpService.UpdateForumPostAsync(id, dto);
-        if(fp == null)
-            return NotFound();
+        try
+        {
+            var fp = await _fpService.UpdateForumPostAsync(id, dto);
+            if(fp == null)
+                return NotFound();
 
-        return Ok(fp);
+            return Ok(fp);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new {error = ex.Message});
+        }
     }
 
     // DELETE
