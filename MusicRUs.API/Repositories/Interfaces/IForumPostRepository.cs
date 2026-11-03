@@ -1,4 +1,3 @@
-using MusicRUs.API.Models;
 using MusicRUs.API.Models.Entities;
 
 namespace MusicRUs.API.Repositories.Interfaces;

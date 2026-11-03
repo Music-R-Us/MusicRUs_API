@@ -16,6 +16,7 @@ public class ForumProfileRepository : Repository<ForumProfile>, IForumProfileRep
         => await _dbSet
             .Include(fp => fp.FavoriteArtists).ThenInclude(fa => fa.Artist)
             .Include(fp => fp.FavoriteAlbums).ThenInclude(fa => fa.Album)
+            .Include(fp => fp.Genres)
             .FirstOrDefaultAsync(fp => fp.UserId == userId);
     
     public async Task<IEnumerable<ForumProfile>> SearchFpByKeywordAsync(string keyword)

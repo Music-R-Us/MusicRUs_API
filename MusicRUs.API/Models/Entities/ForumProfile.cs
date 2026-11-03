@@ -24,7 +24,7 @@ public class ForumProfile : IHasTimestamps
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
-    public List<FavoriteArtist> FavoriteArtists { get; } = [];
-    public List<FavoriteAlbum> FavoriteAlbums { get; } = [];
+    public List<FavoriteArtist> FavoriteArtists { get; set;} = [];
+    public List<FavoriteAlbum> FavoriteAlbums { get; set; } = [];
     public List<Genre> Genres { get; set; } = [];
 }

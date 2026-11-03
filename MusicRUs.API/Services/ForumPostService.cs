@@ -2,6 +2,7 @@ using MusicRUs.API.DTOs;
 using MusicRUs.API.Models.Entities;
 using MusicRUs.API.Services.Interfaces;
 using MusicRUs.API.Repositories.Interfaces;
+using MusicRUs.API.Backend.Helpers;
 
 namespace MusicRUs.API.Services;
 
@@ -31,9 +32,9 @@ public class ForumPostService : IForumPostService
             ArtistId = dto.ArtistId
         };
 
-        if (dto.GenreIds is {Count: > 0}) // Check if there are any genre IDs provided
+        if (dto.GenreIds is {Count: > 0}) // If any genre IDs provided
         {
-            var genres = await GetValidGenresAsync(dto.GenreIds);
+            var genres = await RelationHelper.GetAllOrThrowAsync(_genreRepo, dto.GenreIds, "genre");
             fp.Genres = genres;
         }
         
@@ -111,14 +112,14 @@ public class ForumPostService : IForumPostService
         if(fp == null)
             return null!;
 
-        fp.Title = dto.Title ?? fp.Title;
+        fp.Title = dto.Title ?? fp.Title; // Update title if provided
         fp.Content = dto.Content ?? fp.Content;
         fp.TrackId = dto.TrackId ?? fp.TrackId;
         fp.AlbumId = dto.AlbumId ?? fp.AlbumId;
         fp.ArtistId = dto.ArtistId ?? fp.ArtistId;
 
         if(dto.GenreIds != null)
-            fp.Genres = await GetValidGenresAsync(dto.GenreIds);
+            fp.Genres = await RelationHelper.GetAllOrThrowAsync(_genreRepo, dto.GenreIds, "genre");
 
         _fpRepo.Update(fp);
         await _fpRepo.SaveChangesAsync();
@@ -139,7 +140,7 @@ public class ForumPostService : IForumPostService
 
     //#########################################
     // Private method to validate genre IDs and retrieve corresponding Genre entities
-    private async Task<List<Genre>> GetValidGenresAsync(IEnumerable<int> ids) // Validate genre IDs
+    /*private async Task<List<Genre>> GetValidGenresAsync(IEnumerable<int> ids) // Validate genre IDs
     {
         var distinctIds = ids.Distinct().ToList(); // Remove duplicate IDs
         var genres = await _genreRepo.GetGenresByIdsAsync(distinctIds);
@@ -152,7 +153,7 @@ public class ForumPostService : IForumPostService
         }
 
         return genres;
-    }
+    }*/
 
 
 
