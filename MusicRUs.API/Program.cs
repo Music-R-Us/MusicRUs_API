@@ -63,6 +63,7 @@ builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
 builder.Services.AddScoped<ICatalogImportService, CatalogImportService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IForumPostService, ForumPostService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 
 // Database
