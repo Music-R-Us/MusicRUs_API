@@ -25,6 +25,9 @@ public class ForumProfileResponseDto // Dto for returning forum profile data in 
     public bool? IsPublic { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public List<ArtistIncludeDto>? FavoriteArtists { get; set; } 
+    public List<AlbumIncludeDto>? FavoriteAlbums { get; set; } 
+    public List<GenreIncludeDto>? Genres { get; set; } 
 }
 
 public class ForumProfileUpdatedDto // DTO for updating forum profile data
@@ -42,4 +45,7 @@ public class ForumProfileUpdatedDto // DTO for updating forum profile data
     public string? AccentColor { get; set; }
     public bool? IsPublic { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public List<int>? FavoriteArtistIds { get; set; } 
+    public List<int>? FavoriteAlbumIds { get; set; } 
+    public List<int>? GenreIds { get; set; } 
 }

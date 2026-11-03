@@ -43,6 +43,10 @@ namespace MusicRUs.API.Repositories
         // Get all rows
         public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync(); 
 
+        // Get entities by an array of IDs
+        public async Task<List<T>> GetByIdsAsync(IEnumerable<int> ids) 
+            => await _dbSet.Where(e => ids.Contains(EF.Property<int>(e, "Id"))).ToListAsync();
+
         // Get paginated entities
         public virtual async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(int page, int pageSize) 
         {
