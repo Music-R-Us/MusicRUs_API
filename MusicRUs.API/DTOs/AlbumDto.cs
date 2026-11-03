@@ -36,4 +36,5 @@ public class AlbumIncludeDto //DTO for including album information for artists
     public int? TotalTracks { get; set; }
     public string? ImageUrl { get; set; }
     public string? SpotifyUrl { get; set; }
+    //public List<ArtistIncludeDto> Artists { get; set; } = [];
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using MusicRUs.API.DTOs;
 
 namespace MusicRUs.API.DTOs;
 
@@ -30,6 +31,9 @@ public class ForumPostResponseDto // DTO for returning forum post data from the 
     public int? TrackId { get; set; }
     public int? AlbumId { get; set; }
     public int? ArtistId { get; set; }
+    public TrackIncludeDto? Track { get; set;}
+    public AlbumIncludeDto? Album {get; set;}
+    public ArtistIncludeDto? Artist { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public List<GenreIncludeDto>? Genres { get; set; } 

@@ -1,7 +1,6 @@
 using MusicRUs.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using MusicRUs.API.DTOs;
-using MusicRUs.API.Models.Entities;
 
 namespace MusicRUs.API.Controllers;
 
@@ -16,6 +15,8 @@ public class TrackController : ControllerBase
         _trackService = trackService;
     }
 
+    // READ
+    //#########################################
     [HttpGet("{id:int}")]
     public async Task<ActionResult<TrackResponseDto?>> GetTrackById(int id)
     {

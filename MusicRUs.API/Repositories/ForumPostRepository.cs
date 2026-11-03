@@ -8,39 +8,43 @@ public class ForumPostRepository : Repository<ForumPost>, IForumPostRepository
 {
     public ForumPostRepository(DbContext context) : base(context) {}
 
+        private IQueryable<ForumPost> IncludeRelatedEntities() // Includes related entities for forum posts
+        => _dbSet
+        .Include(fp => fp.Genres)
+        .Include(fp => fp.Album)
+        .Include(fp => fp.Track)
+        .Include(fp => fp.Artist);
+
+        //#######################################################
+
     // Retrieves forum post by ID, including comments.
     public override async Task<ForumPost?> GetByIdAsync(int id)
-    => await _dbSet
+    => await IncludeRelatedEntities()
         .Include(fp => fp.Comments)
-        .Include(fp => fp.Genres)
         .FirstOrDefaultAsync(fp => fp.Id == id);
 
     public async Task<IEnumerable<ForumPost>?> GetForumPostsByUserIdAsync(int userId)
-    => await _dbSet
+    => await IncludeRelatedEntities()
         .Where(fp => fp.UserId == userId)
         .ToListAsync();
 
     public async Task<IEnumerable<ForumPost>?> GetForumPostsByTrackIdAsync(int trackId)
-    => await _dbSet
-        .Include(fp => fp.Genres)
+    => await IncludeRelatedEntities()
         .Where(fp => fp.TrackId == trackId)
         .ToListAsync();
 
     public async Task<IEnumerable<ForumPost>?> GetForumPostsByAlbumIdAsync(int albumId)
-    => await _dbSet
-        .Include(fp => fp.Genres)
+    => await IncludeRelatedEntities()
         .Where(fp => fp.AlbumId == albumId)
         .ToListAsync();
 
     public async Task<IEnumerable<ForumPost>?> GetForumPostsByArtistIdAsync(int artistId)
-    => await _dbSet
-        .Include(fp => fp.Genres)
+    => await IncludeRelatedEntities()
         .Where(fp => fp.ArtistId == artistId)
         .ToListAsync();
 
     public async Task<IEnumerable<ForumPost>?> GetForumPostsByGenreIdAsync(int genreId)
-    => await _dbSet
-        .Include(fp => fp.Genres)
+    => await IncludeRelatedEntities()
         .Where(fp => fp.Genres.Any(g => g.Id == genreId))
         .ToListAsync();
 

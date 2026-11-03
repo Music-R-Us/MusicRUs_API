@@ -11,5 +11,5 @@ public interface IMusicCollectionRepository : IRepository<MusicCollection>
     Task<MusicCollection?> GetCollectionItemAsync(int userId, int collectionId); 
 
     // Check if a specific entry exists in the user's collection
-    Task<bool> EntryExistAsync(int userId, int albumId, MediaFormat format); 
+    Task<bool> EntryExistAsync(int userId, int albumId, MediaFormat format, CollectionStatus status); 
 }
