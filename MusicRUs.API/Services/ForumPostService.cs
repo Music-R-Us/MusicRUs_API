@@ -32,6 +32,11 @@ public class ForumPostService : IForumPostService
             ArtistId = dto.ArtistId
         };
 
+        // Ensure that the post links to only one track, album, or artist
+        var linkCount = new[] { fp.TrackId, fp.AlbumId, fp.ArtistId }.Count(x => x != null);
+        if(linkCount > 1)
+            throw new ArgumentException("A post can only link to one of track, album, or artist.");
+
         if (dto.GenreIds is {Count: > 0}) // If any genre IDs provided
         {
             var genres = await RelationHelper.GetAllOrThrowAsync(_genreRepo, dto.GenreIds, "genre");
@@ -118,6 +123,11 @@ public class ForumPostService : IForumPostService
         fp.AlbumId = dto.AlbumId ?? fp.AlbumId;
         fp.ArtistId = dto.ArtistId ?? fp.ArtistId;
 
+        // Ensure that the post links to only one track, album, or artist
+        var linkCount = new[] { fp.TrackId, fp.AlbumId, fp.ArtistId }.Count(x => x != null);
+        if(linkCount > 1)
+            throw new ArgumentException("A post can only link to one of track, album, or artist.");
+
         if(dto.GenreIds != null)
             fp.Genres = await RelationHelper.GetAllOrThrowAsync(_genreRepo, dto.GenreIds, "genre");
 
@@ -136,26 +146,6 @@ public class ForumPostService : IForumPostService
         await _fpRepo.SaveChangesAsync();
         return true;
     }
-
-
-    //#########################################
-    // Private method to validate genre IDs and retrieve corresponding Genre entities
-    /*private async Task<List<Genre>> GetValidGenresAsync(IEnumerable<int> ids) // Validate genre IDs
-    {
-        var distinctIds = ids.Distinct().ToList(); // Remove duplicate IDs
-        var genres = await _genreRepo.GetGenresByIdsAsync(distinctIds);
-        
-        if(genres.Count != distinctIds.Count) // Check if any IDs are missing
-        {
-            var missingIds = distinctIds.Except(genres.Select(g => g.Id)).ToList();
-            throw new ArgumentException(
-                $"Invalid genre IDs: {string.Join(", ", missingIds)}");
-        }
-
-        return genres;
-    }*/
-
-
 
     //#########################################
 

@@ -51,7 +51,7 @@ builder.Services.AddScoped<IArtistRepository, ArtistRepository>();
 builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IForumPostRepository, ForumPostRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
-
+builder.Services.AddScoped<ITrackRepository, TrackRepository>();
 
 // Services (Registering services for Dependency Injection)
 builder.Services.AddScoped<IUserService, UserService>();
@@ -64,6 +64,7 @@ builder.Services.AddScoped<ICatalogImportService, CatalogImportService>();
 builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IForumPostService, ForumPostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<ITrackService, TrackService>();
 
 
 // Database
