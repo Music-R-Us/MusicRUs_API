@@ -10,8 +10,10 @@ public class CreateForumPostDto // DTO for creating a new forum post
     [Required]
     public int UserId { get; set; }
     [Required]
+    [MinLength(8)]
     public string Title { get; set; } = null!; 
     [Required]
+    [MinLength(8)]
     public string Content { get; set; } = null!;
     public int? TrackId { get; set; }
     public int? AlbumId { get; set; }
@@ -41,10 +43,10 @@ public class ForumPostWithCommentsDto : ForumPostResponseDto // DTO for includin
 
 public class ForumPostUpdateDto // DTO for updating an existing forum post
 {
-    [Required]
-    public string Title { get; set; } = null!;
-    [Required]
-    public string Content { get; set; } = null!;
+    [MinLength(8)]
+    public string? Title { get; set; }
+    [MinLength(8)]
+    public string? Content { get; set; }
     public int? TrackId { get; set; }
     public int? AlbumId { get; set; }
     public int? ArtistId { get; set; }

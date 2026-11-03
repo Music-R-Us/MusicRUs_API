@@ -46,13 +46,13 @@ public class CommentService : ICommentService
         return MapToDto(comment);
     }
 
-    public async Task<IEnumerable<CommentResponseDto>> GetCommentsByForumPostIdAsync(int postId) // READ
+    public async Task<IEnumerable<CommentResponseDto>> GetAllCommentsByForumPostIdAsync(int postId) // READ
     {
-        var comments = await _commentRepo.GetCommentsByForumPostIdAsync(postId);
+        var comments = await _commentRepo.GetAllCommentsByForumPostIdAsync(postId);
         if (comments == null || !comments.Any())
             return null!;
 
-        return comments.Select(MapToDto).ToList();
+        return comments.OrderBy(c => c.CreatedAt).Select(MapToDto).ToList();
     }
 
     public async Task<CommentResponseDto> UpdateCommentAsync(int id, CommentUpdateDto dto) // UPDATE

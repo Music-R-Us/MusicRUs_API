@@ -10,10 +10,10 @@ public class CommentRepository : Repository<Comment>, ICommentRepository
 
     public async Task<Comment?> GetByUserIdAsync(int userId)
         => await _dbSet.FirstOrDefaultAsync(c => c.UserId == userId);
-        
+
     public async Task<IEnumerable<Comment>?> GetCommentsByUserIdAsync(int userId)
         => await _dbSet.Where(c => c.UserId == userId).ToListAsync();
 
-    public async Task<IEnumerable<Comment>?> GetCommentsByForumPostIdAsync(int postId)
+    public async Task<IEnumerable<Comment>?> GetAllCommentsByForumPostIdAsync(int postId)
     => await _dbSet.Where(c => c.PostId == postId).ToListAsync();
 }
