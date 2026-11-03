@@ -45,7 +45,9 @@ public class ForumPostService : IForumPostService
         
         await _fpRepo.AddAsync(fp);
         await _fpRepo.SaveChangesAsync();
-        return MapToDto(fp);
+        
+        var saved = await _fpRepo.GetByIdAsync(fp.Id); // Retrieve updated row with related entities
+        return MapToDto(saved!); // Map the saved entity to DTO and return
     }
 
     public async Task<ForumPostWithCommentsDto> GetForumPostByIdAsync(int id) // READ
@@ -133,7 +135,9 @@ public class ForumPostService : IForumPostService
 
         _fpRepo.Update(fp);
         await _fpRepo.SaveChangesAsync();
-        return MapToDto(fp);
+
+        var saved = await _fpRepo.GetByIdAsync(fp.Id); // Retrieve updated row with related entities
+        return MapToDto(saved!); // Map the saved entity to DTO and return
     }
 
     public async Task<bool> DeleteForumPostAsync(int id) // DELETE
@@ -161,6 +165,9 @@ public class ForumPostService : IForumPostService
             TrackId = fp.TrackId,
             AlbumId = fp.AlbumId,
             ArtistId = fp.ArtistId,
+            Track = fp.Track is null ? null : new TrackIncludeDto { Id = fp.Track.Id, Title = fp.Track.Title },
+            Album = fp.Album is null ? null : new AlbumIncludeDto { Id = fp.Album.Id, Title = fp.Album.Title },
+            Artist = fp.Artist is null ? null : new ArtistIncludeDto { Id = fp.Artist.Id, Name = fp.Artist.Name },
             CreatedAt = fp.CreatedAt, 
             UpdatedAt = fp.UpdatedAt,
             Genres = fp.Genres
@@ -180,6 +187,9 @@ public class ForumPostService : IForumPostService
             TrackId = fp.TrackId,
             AlbumId = fp.AlbumId,
             ArtistId = fp.ArtistId,
+            Track = fp.Track is null ? null : new TrackIncludeDto { Id = fp.Track.Id, Title = fp.Track.Title },
+            Album = fp.Album is null ? null : new AlbumIncludeDto { Id = fp.Album.Id, Title = fp.Album.Title },
+            Artist = fp.Artist is null ? null : new ArtistIncludeDto { Id = fp.Artist.Id, Name = fp.Artist.Name },
             CreatedAt = fp.CreatedAt,
             UpdatedAt = fp.UpdatedAt,
             Genres = fp.Genres

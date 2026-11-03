@@ -16,9 +16,9 @@ public class MusicCollectionService : IMusicCollectionService
 
     // Implement the methods defined in IMusicCollectionService here
 
-    public async Task<MusicCollectionResponseDto?> AddToCollectionAsync(CreateMusicCollectionDto dto) // CREATE
+    public async Task<MusicCollectionResponseDto?> AddToOwnedCollectionAsync(CreateOwnedMusicCollectionDto dto) // CREATE (Owned collection)
     {
-        if (await _mcRepo.EntryExistAsync(dto.UserId, dto.AlbumId, dto.Format))
+        if (await _mcRepo.EntryExistAsync(dto.UserId, dto.AlbumId, dto.Format, CollectionStatus.Owned))
             return null!; // Entry already exists in the collection
 
         var item = new MusicCollection
@@ -27,21 +27,44 @@ public class MusicCollectionService : IMusicCollectionService
             AlbumId = dto.AlbumId,
             Format = dto.Format,
             Condition = dto.Condition,
-            Status = dto.Status
+            Status = CollectionStatus.Owned
         };
 
         await _mcRepo.AddAsync(item);
         await _mcRepo.SaveChangesAsync();
-        return MapToDto(item);
+
+        var saved = await _mcRepo.GetCollectionItemAsync(dto.UserId, item.Id);
+        return MapToDto(saved!);
     }
 
-    public async Task<IEnumerable<MusicCollectionResponseDto>> GetOwnedCollectionAsync(int userId) // READ Owned
+    public async Task<MusicCollectionResponseDto?> AddToWantedCollectionAsync(CreateWantedMusicCollectionDto dto) // CREATE (Wanted collection)
+    {
+        if (await _mcRepo.EntryExistAsync(dto.UserId, dto.AlbumId, dto.Format, CollectionStatus.Wanted))
+            return null!; // Entry already exists in the collection
+
+        var item = new MusicCollection
+        {
+            UserId = dto.UserId,
+            AlbumId = dto.AlbumId,
+            Format = dto.Format,
+            Condition = dto.Condition,
+            Status = CollectionStatus.Wanted
+        };
+
+        await _mcRepo.AddAsync(item);
+        await _mcRepo.SaveChangesAsync();
+
+        var saved = await _mcRepo.GetCollectionItemAsync(dto.UserId, item.Id);
+        return MapToDto(saved!);
+    }
+
+    public async Task<IEnumerable<MusicCollectionResponseDto>> GetOwnedCollectionByUserIdAsync(int userId) // READ Owned
     {
         var collection = await _mcRepo.GetCollectionByUserIdAsync(userId, CollectionStatus.Owned);
         return collection.Select(MapToDto).ToList();
     }
 
-    public async Task<IEnumerable<MusicCollectionResponseDto>> GetWantedCollectionAsync(int userId) // READ Wanted
+    public async Task<IEnumerable<MusicCollectionResponseDto>> GetWantedCollectionByUserIdAsync(int userId) // READ Wanted
     {
         var collection = await _mcRepo.GetCollectionByUserIdAsync(userId, CollectionStatus.Wanted);
         return collection.Select(MapToDto).ToList();
@@ -83,18 +106,27 @@ public class MusicCollectionService : IMusicCollectionService
     //#########################################
 
     // Helper method to map MusicCollection entity to MusicCollectionResponseDto (MapToDto)
-    private static MusicCollectionResponseDto MapToDto(MusicCollection item) 
+    private static MusicCollectionResponseDto MapToDto(MusicCollection mc)
     {
         return new MusicCollectionResponseDto
         {
-            Id = item.Id,
-            UserId = item.UserId,
-            AlbumId = item.AlbumId,
-            Format = item.Format,
-            Condition = item.Condition,
-            Status = item.Status,
-            CreatedAt = item.CreatedAt,
-            UpdatedAt = item.UpdatedAt
+            Id = mc.Id,
+            UserId = mc.UserId,
+            AlbumId = mc.AlbumId,
+            Format = mc.Format,
+            Condition = mc.Condition,
+            Status = mc.Status,
+            CreatedAt = mc.CreatedAt,
+            UpdatedAt = mc.UpdatedAt,
+            Album = mc.Album is null ? null : new AlbumResponseDto
+            {
+                Id = mc.Album.Id,
+                Title = mc.Album.Title,
+                Artists = mc.Album.Artists
+                    .Select(a => new ArtistIncludeDto {Id = a.Id, Name = a.Name, ImageUrl = a.ImageUrl})
+                .ToList(),
+                ReleaseDate = mc.Album.ReleaseDate
+            }
         };
     }
 }
