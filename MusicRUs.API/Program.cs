@@ -8,6 +8,7 @@ using MusicRUs.API.Repositories.Interfaces;
 using MusicRUs.API.Data.Interceptors;
 using System.Text.Json.Serialization;
 using MusicRUs.API.Backend.Logic.Spotify;
+using MusicRUs.API.Backend.Logic.Ticketmaster;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,16 @@ builder.Services.AddOptions<SpotifyOptions>()
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ISpotifyClient, SpotifyClient>(client =>
     client.BaseAddress = new Uri("https://api.spotify.com/"));
+
+
+// Ticketmaster
+builder.Services.Configure<TicketmasterOptions>(
+    builder.Configuration.GetSection(TicketmasterOptions.SectionName));
+builder.Services.AddHttpClient<ITicketmasterClient, TicketmasterClient>(client =>
+{
+    client.BaseAddress = new Uri("https://app.ticketmaster.com/");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
     
 // Repositories (Registering repositories for Dependency Injection)
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -52,6 +63,7 @@ builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IForumPostRepository, ForumPostRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ITrackRepository, TrackRepository>();
+builder.Services.AddScoped<IConcertRepository, ConcertRepository>();
 
 // Services (Registering services for Dependency Injection)
 builder.Services.AddScoped<IUserService, UserService>();
@@ -65,7 +77,7 @@ builder.Services.AddScoped<IGenreService, GenreService>();
 builder.Services.AddScoped<IForumPostService, ForumPostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<ITrackService, TrackService>();
-
+builder.Services.AddScoped<IConcertService, ConcertService>();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("MusicRUs")
