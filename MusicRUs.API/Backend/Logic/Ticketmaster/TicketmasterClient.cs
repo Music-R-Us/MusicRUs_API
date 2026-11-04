@@ -24,7 +24,7 @@ public class TicketmasterClient : ITicketmasterClient
     public async Task<IReadOnlyList<TicketmasterAttraction>> SearchAttractionsAsync(string name)
     {
         var result = await GetAsync<TicketmasterAttractionSearch>(
-            $"discovery/v2/attractions.json?keyword={Uri.EscapeDataString(name)}&classificationName=music&size=20");
+            $"discovery/v2/attractions.json?keyword={Uri.EscapeDataString(name)}&classificationName=music&size=20&locale=*"); // "locale=*" added to include all locales - otherwise some attractions might be filtered out
         return result?.Embedded?.Attractions ?? [];
     }
 
@@ -33,7 +33,7 @@ public class TicketmasterClient : ITicketmasterClient
         var now = DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
         var result = await GetAsync<TicketmasterEventSearch>(
             $"discovery/v2/events.json?attractionId={Uri.EscapeDataString(attractionId)}" +
-            $"&startDateTime={now}&sort=date,asc&size={PageSize}");
+            $"&startDateTime={now}&sort=date,asc&size={PageSize}&locale=*"); // "locale=*" added to include all locales - otherwise some events might be filtered out   
         return result?.Embedded?.Events ?? [];
     }
 
