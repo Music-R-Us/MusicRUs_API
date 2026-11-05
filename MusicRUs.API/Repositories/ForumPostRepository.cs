@@ -23,6 +23,10 @@ public class ForumPostRepository : Repository<ForumPost>, IForumPostRepository
         .Include(fp => fp.Comments)
         .FirstOrDefaultAsync(fp => fp.Id == id);
 
+    public override async Task<IEnumerable<ForumPost>?> GetAllAsync()
+    => await IncludeRelatedEntities()
+        .ToListAsync();
+
     public async Task<IEnumerable<ForumPost>?> GetForumPostsByUserIdAsync(int userId)
     => await IncludeRelatedEntities()
         .Where(fp => fp.UserId == userId)

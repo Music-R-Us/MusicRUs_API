@@ -100,6 +100,17 @@ public class ForumPostController : ControllerBase
         return Ok(fps);
     }
 
+    // Get ForumPosts by Genre ID
+    [HttpGet("genre/{genreId:int}")]
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetForumPostsByGenreId(int genreId)
+    {
+        var fps = await _fpService.GetForumPostsByGenreIdAsync(genreId);
+        if (fps == null)
+            return NotFound();
+
+        return Ok(fps);
+    }
+
     // Get all ForumPosts
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetAllForumPosts()
@@ -115,11 +126,11 @@ public class ForumPostController : ControllerBase
     //##############################################################################
     // Update ForumPost
     [HttpPatch("updateForumPost/{id:int}")]
-    public async Task<ActionResult<ForumPostResponseDto?>> UpdateForumPost(int id, [FromBody] ForumPostUpdateDto dto)
+    public async Task<ActionResult<ForumPostResponseDto?>> UpdateForumPost(int id, int userId, [FromBody] ForumPostUpdateDto dto)
     {
         try
         {
-            var fp = await _fpService.UpdateForumPostAsync(id, dto);
+            var fp = await _fpService.UpdateForumPostAsync(id, userId, dto);
             if(fp == null)
                 return NotFound();
 

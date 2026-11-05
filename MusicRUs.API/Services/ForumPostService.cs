@@ -95,6 +95,15 @@ public class ForumPostService : IForumPostService
         return fps.Select(MapToDto).ToList();
     }
 
+    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByGenreIdAsync(int genreId) // READ
+    {
+        var fps = await _fpRepo.GetForumPostsByGenreIdAsync(genreId);
+        if(fps == null)
+            return null!;
+
+        return fps.Select(MapToDto).ToList();
+    }
+
     public async Task<IEnumerable<ForumPostResponseDto>> GetAllForumPostsAsync() // READ
     {
         var fps = await _fpRepo.GetAllAsync();
@@ -113,11 +122,14 @@ public class ForumPostService : IForumPostService
         return fps.Select(MapToDto).ToList();
     }
 
-    public async Task<ForumPostResponseDto> UpdateForumPostAsync(int id, ForumPostUpdateDto dto) // UPDATE
+    public async Task<ForumPostResponseDto> UpdateForumPostAsync(int id, int userId, ForumPostUpdateDto dto) // UPDATE
     {
         var fp = await _fpRepo.GetByIdAsync(id);
         if(fp == null)
-            return null!;
+            throw new ArgumentException("Forum post not found.");
+        
+        if(fp.UserId != userId)
+            throw new ArgumentException("User is not authorized to update this post.");
 
         fp.Title = dto.Title ?? fp.Title; // Update title if provided
         fp.Content = dto.Content ?? fp.Content;
@@ -166,8 +178,8 @@ public class ForumPostService : IForumPostService
             AlbumId = fp.AlbumId,
             ArtistId = fp.ArtistId,
             Track = fp.Track is null ? null : new TrackIncludeDto { Id = fp.Track.Id, Title = fp.Track.Title },
-            Album = fp.Album is null ? null : new AlbumIncludeDto { Id = fp.Album.Id, Title = fp.Album.Title },
-            Artist = fp.Artist is null ? null : new ArtistIncludeDto { Id = fp.Artist.Id, Name = fp.Artist.Name },
+            Album = fp.Album is null ? null : new AlbumIncludeDto { Id = fp.Album.Id, Title = fp.Album.Title , ImageUrl = fp.Album.ImageUrl},
+            Artist = fp.Artist is null ? null : new ArtistIncludeDto { Id = fp.Artist.Id, Name = fp.Artist.Name , ImageUrl = fp.Artist.ImageUrl},
             CreatedAt = fp.CreatedAt, 
             UpdatedAt = fp.UpdatedAt,
             Genres = fp.Genres
@@ -188,8 +200,8 @@ public class ForumPostService : IForumPostService
             AlbumId = fp.AlbumId,
             ArtistId = fp.ArtistId,
             Track = fp.Track is null ? null : new TrackIncludeDto { Id = fp.Track.Id, Title = fp.Track.Title },
-            Album = fp.Album is null ? null : new AlbumIncludeDto { Id = fp.Album.Id, Title = fp.Album.Title },
-            Artist = fp.Artist is null ? null : new ArtistIncludeDto { Id = fp.Artist.Id, Name = fp.Artist.Name },
+            Album = fp.Album is null ? null : new AlbumIncludeDto { Id = fp.Album.Id, Title = fp.Album.Title , ImageUrl = fp.Album.ImageUrl},
+            Artist = fp.Artist is null ? null : new ArtistIncludeDto { Id = fp.Artist.Id, Name = fp.Artist.Name , ImageUrl = fp.Artist.ImageUrl},
             CreatedAt = fp.CreatedAt,
             UpdatedAt = fp.UpdatedAt,
             Genres = fp.Genres
