@@ -9,6 +9,7 @@ using MusicRUs.API.Data.Interceptors;
 using System.Text.Json.Serialization;
 using MusicRUs.API.Backend.Logic.Spotify;
 using MusicRUs.API.Backend.Logic.Ticketmaster;
+using MusicRUs.API.Backend.Logic.Hashing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,9 @@ builder.Services.AddControllers()
 builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
+
+// Hashing
+builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
 // Google Auth
 builder.Services

@@ -1,5 +1,6 @@
 using MusicRUs.API.DTOs;
 using MusicRUs.API.Backend.Logic.GoogleAuth;
+using MusicRUs.API.Services;
 
 namespace MusicRUs.API.Services.Interfaces;
 
@@ -14,7 +15,7 @@ public interface IUserService
     Task<UserResponseDto?> GetUserByEmailAndPasswordAsync(string email, string password); // READ
     Task<IEnumerable<UserResponseDto>> SearchUsersByKeywordAsync(string keyword); // READ
     Task<UserResponseDto?> UpdateUsernameAsync(int id, UpdateUsernameDto dto); // UPDATE
-    Task<UserResponseDto?> UpdateEmailAsync(int id, UpdateEmailDto dto); // UPDATE
-    Task<UserResponseDto?> UpdatePasswordAsync(int id, UpdatePasswordDto dto); // UPDATE
+    Task<UpdateUserResult> UpdateEmailAsync(int id, UpdateEmailDto dto); // UPDATE
+    Task<UpdateUserResult> UpdatePasswordAsync(int id, UpdatePasswordDto dto); // UPDATE
     Task<bool> DeleteUserAsync(int id); // DELETE
 }
