@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicRUs.API.DTOs;
 using MusicRUs.API.Services.Interfaces;
+using MusicRUs.API.Services;
 
 namespace MusicRUs.API.Controllers;
 
@@ -97,26 +98,36 @@ public class UserController : ControllerBase
 
     // Update email
     [HttpPatch("updateEmail/{id:int}")]
-    public async Task<ActionResult<UserResponseDto?>> UpdateEmail(int id, [FromBody] UpdateEmailDto dto)
+    public async Task<ActionResult<UserResponseDto>> UpdateEmail(int id, [FromBody] UpdateEmailDto dto)
     {
-        var user = await _userService.UpdateEmailAsync(id, dto);
-        if (user is null)
+        var result = await _userService.UpdateEmailAsync(id, dto);
+        switch (result.Error)
         {
-            return NotFound();
+            case UpdateUserError.NotFound:
+                return NotFound();
+            case UpdateUserError.WrongPassword:
+                return BadRequest("Wrong current password.");
+            case UpdateUserError.EmailInUse:
+                return Conflict("The e-mail is already in use.");
+            default:
+                return Ok(result.User);
         }
-        return Ok(user);
     }
 
     // Update password
     [HttpPatch("updatePassword/{id:int}")]
     public async Task<ActionResult<UserResponseDto?>> UpdatePassword(int id, [FromBody] UpdatePasswordDto dto)
     {
-        var user = await _userService.UpdatePasswordAsync(id, dto);
-        if (user is null)
+        var result = await _userService.UpdatePasswordAsync(id, dto);
+        switch (result.Error)
         {
-            return NotFound();
+            case UpdateUserError.NotFound:
+                return NotFound();
+            case UpdateUserError.WrongPassword:
+                return BadRequest("Wrong current password.");
+            default:
+                return Ok(result.User);
         }
-        return Ok(user);
     }
 
     // DELETE

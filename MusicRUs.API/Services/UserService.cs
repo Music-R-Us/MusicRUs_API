@@ -3,6 +3,7 @@ using MusicRUs.API.Backend.Logic.GoogleAuth;
 using MusicRUs.API.Models.Entities;
 using MusicRUs.API.Repositories.Interfaces;
 using MusicRUs.API.Services.Interfaces;
+using MusicRUs.API.Backend.Logic.Hashing;
 
 namespace MusicRUs.API.Services;
 
@@ -10,9 +11,12 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepo;
 
-    public UserService(IUserRepository userRepository)
+    private readonly IPasswordHasher _passwordHasher;
+
+     public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher)
     {
         _userRepo = userRepository;
+        _passwordHasher = passwordHasher;
     }
 
     // Implement the methods defined in IUserService interface
@@ -29,7 +33,7 @@ public class UserService : IUserService
         {
             Username = dto.Username,
             Email = dto.Email,
-            PasswordHash = dto.Password,
+            PasswordHash = _passwordHasher.Hash(dto.Password).Value,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -80,17 +84,15 @@ public class UserService : IUserService
     public async Task<UserResponseDto?> GetUserByUsernameAndPasswordAsync(string username, string password) // READ
     {
         var user = await _userRepo.GetUserByUsernameAsync(username);
-        if (user is null || user.PasswordHash != password)
-        {
-            return null; // User not found or password mismatch
-        }
+        if (user?.PasswordHash is null || !_passwordHasher.Verify(password, HashedPassword.FromStoredHash(user.PasswordHash)))
+            return null;
         return MapToDto(user);
     }
 
     public async Task<UserResponseDto?> GetUserByEmailAndPasswordAsync(string email, string password) // READ
     {
         var user = await _userRepo.GetUserByEmailAsync(email);
-        if (user is null || user.PasswordHash != password)
+        if (user?.PasswordHash is null || !_passwordHasher.Verify(password, HashedPassword.FromStoredHash(user.PasswordHash)))
         {
             return null; // User not found or password mismatch
         }
@@ -117,32 +119,46 @@ public class UserService : IUserService
         return MapToDto(user);
     }
 
-    public async Task<UserResponseDto?> UpdateEmailAsync(int id, UpdateEmailDto dto) // UPDATE
+    public async Task<UpdateUserResult> UpdateEmailAsync(int id, UpdateEmailDto dto) // UPDATE
     {
         var user = await _userRepo.GetByIdAsync(id);
         if (user is null)
-        {
-            return null; // User not found
-        }
-        user.Email = dto.NewEmail;
+            return UpdateUserResult.Fail(UpdateUserError.NotFound);
+
+        if (user.PasswordHash is null
+            || !_passwordHasher.Verify(dto.CurrentPassword, HashedPassword.FromStoredHash(user.PasswordHash)))
+            return UpdateUserResult.Fail(UpdateUserError.WrongPassword);
+
+        var newEmail = dto.NewEmail.Trim();
+
+        // Only check for duplicates if it is actually a different e-mail.
+        // The column is citext, so "Mark@mark.dk" and "mark@mark.dk" count as the same
+        var isSameEmail = string.Equals(user.Email, newEmail, StringComparison.OrdinalIgnoreCase);
+        if (!isSameEmail && await _userRepo.EmailExistsAsync(newEmail))
+            return UpdateUserResult.Fail(UpdateUserError.EmailInUse);
+
+        user.Email = newEmail;
         user.UpdatedAt = DateTime.UtcNow;
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync();
-        return MapToDto(user);
+        return UpdateUserResult.Ok(MapToDto(user));
     }
 
-    public async Task<UserResponseDto?> UpdatePasswordAsync(int id, UpdatePasswordDto dto) // UPDATE
+    public async Task<UpdateUserResult> UpdatePasswordAsync(int id, UpdatePasswordDto dto) // UPDATE
     {
         var user = await _userRepo.GetByIdAsync(id);
         if (user is null)
-        {
-            return null; // User not found
-        }
-        user.PasswordHash = dto.NewPassword;
+            return UpdateUserResult.Fail(UpdateUserError.NotFound);
+
+        if (user.PasswordHash is null
+            || !_passwordHasher.Verify(dto.CurrentPassword, HashedPassword.FromStoredHash(user.PasswordHash)))
+            return UpdateUserResult.Fail(UpdateUserError.WrongPassword);
+
+        user.PasswordHash = _passwordHasher.Hash(dto.NewPassword).Value;
         user.UpdatedAt = DateTime.UtcNow;
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync();
-        return MapToDto(user);
+        return UpdateUserResult.Ok(MapToDto(user));
     }
 
     public async Task<bool> DeleteUserAsync(int id) // DELETE
