@@ -39,6 +39,9 @@ public class AppDbContext : DbContext
     public DbSet<UserBlock> UserBlocks => Set<UserBlock>();
     public DbSet<Message> Messages => Set<Message>();
 
+    // Deletion Logs
+    public DbSet<DeletionLog> DeletionLogs => Set<DeletionLog>();
+
 
     
     protected override void OnModelCreating(ModelBuilder modelBuilder) 

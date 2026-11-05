@@ -89,10 +89,13 @@ var connectionString = builder.Configuration.GetConnectionString("MusicRUs")
         "ConnectionStrings:MusicRUs mangler i user-secrets eller miljøvariabler.");
 
 builder.Services.AddSingleton<TimestampInterceptor>();
+builder.Services.AddSingleton<DeletionLogInterceptor>();
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
     options.UseNpgsql(connectionString)
            .UseSnakeCaseNamingConvention()
-           .AddInterceptors(sp.GetRequiredService<TimestampInterceptor>()));
+           .AddInterceptors(
+               sp.GetRequiredService<TimestampInterceptor>(),
+               sp.GetRequiredService<DeletionLogInterceptor>()));
 
 // CORS
 const string FrontendCorsPolicy = "Frontend";

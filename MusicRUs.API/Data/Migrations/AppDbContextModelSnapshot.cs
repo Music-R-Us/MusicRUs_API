@@ -368,6 +368,47 @@ namespace MusicRUs.API.Data.Migrations
                     b.ToTable("concerts", (string)null);
                 });
 
+            modelBuilder.Entity("MusicRUs.API.Models.Entities.DeletionLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<int?>("DeletedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleted_by_user_id");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("TableName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("table_name");
+
+                    b.HasKey("Id")
+                        .HasName("pk_deletion_logs");
+
+                    b.HasIndex("DeletedAt")
+                        .HasDatabaseName("ix_deletion_logs_deleted_at");
+
+                    b.HasIndex("TableName", "EntityId")
+                        .HasDatabaseName("ix_deletion_logs_table_name_entity_id");
+
+                    b.ToTable("deletion_logs", (string)null);
+                });
+
             modelBuilder.Entity("MusicRUs.API.Models.Entities.FavoriteAlbum", b =>
                 {
                     b.Property<int>("ProfileId")
