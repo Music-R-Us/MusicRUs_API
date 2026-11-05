@@ -16,6 +16,7 @@ public class TrackResponseDto //DTO for returning track information
     public bool Explicit { get; set; }
     public string? SpotifyUrl { get; set; }
     public List<ArtistIncludeDto> Artists { get; set; } = [];
+    public AlbumIncludeDto Album { get; set; } = null!;
 }
 
 public class TrackIncludeDto // DTO for including related track information

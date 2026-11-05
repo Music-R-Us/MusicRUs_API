@@ -122,6 +122,7 @@ public class MusicCollectionService : IMusicCollectionService
             {
                 Id = mc.Album.Id,
                 Title = mc.Album.Title,
+                ImageUrl = mc.Album.ImageUrl,
                 Artists = mc.Album.Artists
                     .Select(a => new ArtistIncludeDto {Id = a.Id, Name = a.Name, ImageUrl = a.ImageUrl})
                 .ToList(),

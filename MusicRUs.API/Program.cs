@@ -68,6 +68,7 @@ builder.Services.AddScoped<IForumPostRepository, ForumPostRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ITrackRepository, TrackRepository>();
 builder.Services.AddScoped<IConcertRepository, ConcertRepository>();
+builder.Services.AddScoped<IFriendshipRepository, FriendshipRepository>();
 
 // Services (Registering services for Dependency Injection)
 builder.Services.AddScoped<IUserService, UserService>();
@@ -82,6 +83,7 @@ builder.Services.AddScoped<IForumPostService, ForumPostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<ITrackService, TrackService>();
 builder.Services.AddScoped<IConcertService, ConcertService>();
+builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("MusicRUs")

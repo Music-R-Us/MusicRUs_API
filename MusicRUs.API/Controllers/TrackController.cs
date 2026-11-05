@@ -17,6 +17,7 @@ public class TrackController : ControllerBase
 
     // READ
     //#########################################
+    // Get Track by ID
     [HttpGet("{id:int}")]
     public async Task<ActionResult<TrackResponseDto?>> GetTrackById(int id)
     {
@@ -25,5 +26,13 @@ public class TrackController : ControllerBase
             return NotFound();
 
         return Ok(track);
+    }
+
+    //Search Track by Keyword
+    [HttpGet("search")]
+    public async Task<ActionResult<IEnumerable<TrackResponseDto>>> SearchTracksByKeyword(string keyword)
+    {
+        var tracks = await _trackService.SearchTracksByKeywordAsync(keyword);
+        return Ok(tracks);
     }
 }

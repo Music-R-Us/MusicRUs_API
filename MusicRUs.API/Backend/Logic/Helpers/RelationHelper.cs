@@ -10,12 +10,12 @@ public static class RelationHelper
         var distinctIds = ids.Distinct().ToList();
         var entities = await repo.GetByIdsAsync(distinctIds); // Fetch entities by IDs
         if (entities.Count != distinctIds.Count)
-            throw new Exception($"{entityName} not found");
+            throw new ArgumentException($"{entityName} not found");
         return entities;
     }
 
     public static void SyncOrdered<TJoin>( 
-        ICollection<TJoin> current, // Current collection to be updated
+        ICollection<TJoin> current, // Current collection to be update
         IEnumerable<int> ids, // New collection from client
         Func<TJoin, int> getId, // Return the ID of current item
         Func<int, TJoin> create, // Create a new item from given ID

@@ -29,6 +29,12 @@ public class UserResponseDto // DTO for returning user information in API respon
     public DateTime? UpdatedAt { get; set; }
 }
 
+public class UserIncludeDto
+{
+    public int Id { get; set; }
+    public string Username { get; set; } = null!;
+}
+
 public class UsernameLoginDto // DTO for username-based login
 {
     [Required]

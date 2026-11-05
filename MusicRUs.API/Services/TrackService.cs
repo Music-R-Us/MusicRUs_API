@@ -24,6 +24,12 @@ public class TrackService : ITrackService
 
     }
 
+    public async Task<IEnumerable<TrackResponseDto>> SearchTracksByKeywordAsync(string keyword)
+    {
+        var tracks = await _trackRepo.SearchTracksByKeywordAsync(keyword);
+        return tracks.Select(MapToDto).ToList();
+    }
+
     //#########################################
 
     // Helper mapper ForumPost entity to ForumPostResponseDto (MapToDto)
@@ -46,8 +52,16 @@ public class TrackService : ITrackService
                 Name = a.Name, 
                 ImageUrl = a.ImageUrl, 
                 SpotifyUrl = a.SpotifyUrl
-            }).ToList()
-
+            }).ToList(),
+            Album = new AlbumIncludeDto
+            {
+                Id = track.Album.Id,
+                SpotifyId = track.Album.SpotifyId,
+                Title = track.Album.Title,
+                ReleaseDate = track.Album.ReleaseDate,
+                ImageUrl = track.Album.ImageUrl,
+                SpotifyUrl = track.Album.SpotifyUrl
+            }
         };
     }
 }
