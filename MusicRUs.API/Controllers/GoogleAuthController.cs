@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MusicRUs.API.Backend.Logic.GoogleAuth;
 using MusicRUs.API.DTOs;
 using MusicRUs.API.Services.Interfaces;
+using MusicRUs.API.Backend.Logic.Jwt;
 
 namespace MusicRUs.API.Controllers;
 
@@ -12,16 +13,18 @@ public class GoogleAuthController : ControllerBase
     private readonly IGoogleAuthService _googleAuthService;
     private readonly IUserService _userService;
     private readonly IForumProfileService _fpService;
+    private readonly ITokenService _tokenService;
 
-    public GoogleAuthController(IGoogleAuthService googleAuthService, IUserService userSrevice, IForumProfileService fpService)
+    public GoogleAuthController(IGoogleAuthService googleAuthService, IUserService userSrevice, IForumProfileService fpService, ITokenService tokenService)
     {
         _googleAuthService = googleAuthService;
         _userService = userSrevice;
         _fpService = fpService;
+        _tokenService = tokenService;
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<UserResponseDto>> GoogleLogin([FromBody] GoogleLoginDto dto)
+    public async Task<ActionResult<AuthResponseDto>> GoogleLogin([FromBody] GoogleLoginDto dto)
     {
         var googleUser = await _googleAuthService.VerifyIdTokenAsync(dto.IdToken);
         if(googleUser == null)
@@ -33,6 +36,6 @@ public class GoogleAuthController : ControllerBase
         
         await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
 
-        return Ok(user);
+        return Ok(_tokenService.CreateAuthResponse(user));
     }
 } 
