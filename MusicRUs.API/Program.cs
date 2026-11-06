@@ -10,6 +10,8 @@ using System.Text.Json.Serialization;
 using MusicRUs.API.Backend.Logic.Spotify;
 using MusicRUs.API.Backend.Logic.Ticketmaster;
 using MusicRUs.API.Backend.Logic.Hashing;
+using System.Text;
+using MusicRUs.API.Backend.Logic.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +26,16 @@ builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>(
 
 // Hashing
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+
+// JWT
+builder.Services.AddOptions<JwtOptions>()
+    .Bind(builder.Configuration.GetSection(JwtOptions.SectionName))
+    .Validate(o => Encoding.UTF8.GetByteCount(o.SigningKey ?? "") >= 32,
+        "Jwt:SigningKey mangler eller er under 32 bytes (user-secrets eller miljøvariabler).")
+    .Validate(o => !string.IsNullOrWhiteSpace(o.Issuer) && !string.IsNullOrWhiteSpace(o.Audience) && o.ExpiresMinutes > 0,
+        "Jwt:Issuer, Jwt:Audience og Jwt:ExpiresMinutes skal være sat i appsettings.json.")
+    .ValidateOnStart();
+builder.Services.AddSingleton<ITokenService, TokenService>();
 
 // Google Auth
 builder.Services

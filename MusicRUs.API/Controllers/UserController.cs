@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MusicRUs.API.DTOs;
 using MusicRUs.API.Services.Interfaces;
 using MusicRUs.API.Services;
+using MusicRUs.API.Backend.Logic.Jwt;
 
 namespace MusicRUs.API.Controllers;
 
@@ -11,11 +12,13 @@ public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IForumProfileService _fpService;
+    private readonly ITokenService _tokenService;
 
-    public UserController(IUserService userService, IForumProfileService fpService)
+    public UserController(IUserService userService, IForumProfileService fpService, ITokenService tokenService)
     {
         _userService = userService;
         _fpService = fpService;
+        _tokenService = tokenService;
     }
 
     // Implement the endpoints for user-related operations
@@ -24,7 +27,7 @@ public class UserController : ControllerBase
     //##############################################################################
     // Create User
     [HttpPost]
-    public async Task<ActionResult<UserResponseDto?>> CreateUser([FromBody] CreateUserDto dto)
+    public async Task<ActionResult<AuthResponseDto>> CreateUser([FromBody] CreateUserDto dto)
     {
         var user = await _userService.CreateUserAsync(dto);
         if (user is null)
@@ -32,7 +35,7 @@ public class UserController : ControllerBase
             return Conflict("User with the same email or username already exists.");
         }
         var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
-        return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
+        return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, _tokenService.CreateAuthResponse(user));
     }
 
     // READ
@@ -51,26 +54,26 @@ public class UserController : ControllerBase
 
     // Get User by username and password
     [HttpPost("login/username")]
-    public async Task<ActionResult<UserResponseDto?>> GetUserByUsernameAndPassword([FromBody] UsernameLoginDto dto)
+    public async Task<ActionResult<AuthResponseDto>> GetUserByUsernameAndPassword([FromBody] UsernameLoginDto dto)
     {
         var user = await _userService.GetUserByUsernameAndPasswordAsync(dto.Username, dto.Password);
         if (user is null)
         {
             return Unauthorized("Invalid username or password.");
         }
-        return Ok(user);
+        return Ok(_tokenService.CreateAuthResponse(user));
     }
 
     // Get User by email and password
     [HttpPost("login/email")]
-    public async Task<ActionResult<UserResponseDto?>> GetUserByEmailAndPassword([FromBody] EmailLoginDto dto)
+    public async Task<ActionResult<AuthResponseDto>> GetUserByEmailAndPassword([FromBody] EmailLoginDto dto)
     {
         var user = await _userService.GetUserByEmailAndPasswordAsync(dto.Email, dto.Password);
         if (user is null)
         {
             return Unauthorized("Invalid email or password.");
         }
-        return Ok(user);
+        return Ok(_tokenService.CreateAuthResponse(user));
     }
 
     //Search users by username keyword
@@ -98,7 +101,7 @@ public class UserController : ControllerBase
 
     // Update email
     [HttpPatch("updateEmail/{id:int}")]
-    public async Task<ActionResult<UserResponseDto>> UpdateEmail(int id, [FromBody] UpdateEmailDto dto)
+    public async Task<ActionResult<UserResponseDto?>> UpdateEmail(int id, [FromBody] UpdateEmailDto dto)
     {
         var result = await _userService.UpdateEmailAsync(id, dto);
         switch (result.Error)
