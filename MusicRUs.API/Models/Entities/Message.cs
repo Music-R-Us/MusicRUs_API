@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace MusicRUs.API.Models.Entities;
 
 public class Message : IHasTimestamps
