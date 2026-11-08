@@ -82,6 +82,7 @@ builder.Services.AddScoped<ITrackRepository, TrackRepository>();
 builder.Services.AddScoped<IConcertRepository, ConcertRepository>();
 builder.Services.AddScoped<IFriendshipRepository, FriendshipRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<IUserBlockRepository, UserBlockRepository>();
 
 // Services (Registering services for Dependency Injection)
 builder.Services.AddScoped<IUserService, UserService>();
@@ -98,6 +99,7 @@ builder.Services.AddScoped<ITrackService, TrackService>();
 builder.Services.AddScoped<IConcertService, ConcertService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IUserBlockService, UserBlockService>();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("MusicRUs")
