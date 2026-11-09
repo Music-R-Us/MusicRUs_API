@@ -15,6 +15,7 @@ using MusicRUs.API.Backend.Logic.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using MusicRUs.API.Backend.Logic.Encryption;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,6 +61,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
+// Encryption
+builder.Services.AddOptions<EncryptionOptions>()
+    .Bind(builder.Configuration.GetSection(EncryptionOptions.SectionName))
+    .Validate(o => EncryptionOptions.KeyLength(o.Key) == 32 && EncryptionOptions.KeyLength(o.HmacKey) >= 32,
+        "Encryption:Key og Encryption:HmacKeymangler i user-secrets eller miljøvariabler.")
+    .ValidateOnStart();
+builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
 
 // Google Auth
 builder.Services

@@ -4,6 +4,7 @@ using MusicRUs.API.Models.Entities;
 using MusicRUs.API.Repositories.Interfaces;
 using MusicRUs.API.Services.Interfaces;
 using MusicRUs.API.Backend.Logic.Hashing;
+using MusicRUs.API.Backend.Logic.Encryption;
 
 namespace MusicRUs.API.Services;
 
@@ -12,18 +13,20 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepo;
 
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IEncryptionService _encryptionService;
 
-     public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher)
+     public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IEncryptionService encryptionService)
     {
         _userRepo = userRepository;
         _passwordHasher = passwordHasher;
+        _encryptionService = encryptionService;
     }
 
     // Implement the methods defined in IUserService interface
     public async Task<UserResponseDto?> CreateUserAsync(CreateUserDto dto) // CREATE
     {
-        // Check if a user with the same email or username already exists
-        if (await _userRepo.EmailExistsAsync(dto.Email) || await _userRepo.UsernameExistsAsync(dto.Username))
+        var emailHash = HashEmail(dto.Email);
+        if (await _userRepo.EmailExistsAsync(emailHash) || await _userRepo.UsernameExistsAsync(dto.Username))
         {
             return null; // User with the same email or username already exists
         }
@@ -32,7 +35,8 @@ public class UserService : IUserService
         var user = new User // Map properties from dto to entity
         {
             Username = dto.Username,
-            Email = dto.Email,
+            Email = _encryptionService.Encrypt(dto.Email.Trim()),
+            EmailHash = emailHash,
             PasswordHash = _passwordHasher.Hash(dto.Password).Value,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -50,9 +54,9 @@ public class UserService : IUserService
         {
             return MapToDto(user); 
         }
-
+        
         // Check if user exists via email and return existing user
-        user = await _userRepo.GetUserByEmailAsync(googleUser.Email);
+        user = await _userRepo.GetUserByEmailAsync(HashEmail(googleUser.Email));
         if (user is not null)
         {
             user.GoogleId = googleUser.GoogleId; // Link Google ID to existing user
@@ -64,7 +68,8 @@ public class UserService : IUserService
         user = new User
         {
             Username = googleUser.Name,
-            Email = googleUser.Email,
+            Email = _encryptionService.Encrypt(googleUser.Email.Trim()),
+            EmailHash = HashEmail(googleUser.Email),
             PasswordHash = null, // No password for Google login
             GoogleId = googleUser.GoogleId,
             CreatedAt = DateTime.UtcNow,
@@ -91,7 +96,7 @@ public class UserService : IUserService
 
     public async Task<UserResponseDto?> GetUserByEmailAndPasswordAsync(string email, string password) // READ
     {
-        var user = await _userRepo.GetUserByEmailAsync(email);
+        var user = await _userRepo.GetUserByEmailAsync(HashEmail(email));
         if (user?.PasswordHash is null || !_passwordHasher.Verify(password, HashedPassword.FromStoredHash(user.PasswordHash)))
         {
             return null; // User not found or password mismatch
@@ -130,14 +135,16 @@ public class UserService : IUserService
             return UpdateUserResult.Fail(UpdateUserError.WrongPassword);
 
         var newEmail = dto.NewEmail.Trim();
+        var newHash = HashEmail(newEmail);
 
         // Only check for duplicates if it is actually a different e-mail.
-        // The column is citext, so "Mark@mark.dk" and "mark@mark.dk" count as the same
-        var isSameEmail = string.Equals(user.Email, newEmail, StringComparison.OrdinalIgnoreCase);
-        if (!isSameEmail && await _userRepo.EmailExistsAsync(newEmail))
+        // The hash is made from the lowercased e-mail, so "Mark@mark.dk" and "mark@mark.dk" give the same hash
+        var isSameEmail = newHash == user.EmailHash;
+        if (!isSameEmail && await _userRepo.EmailExistsAsync(newHash))
             return UpdateUserResult.Fail(UpdateUserError.EmailInUse);
 
-        user.Email = newEmail;
+        user.Email = _encryptionService.Encrypt(newEmail);
+        user.EmailHash = newHash;
         user.UpdatedAt = DateTime.UtcNow;
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync();
@@ -179,15 +186,17 @@ public class UserService : IUserService
 //#########################################
 
     // Helper method to map User entity to UserResponseDto (MapToDto)
-    private static UserResponseDto MapToDto(User user) 
+    private UserResponseDto MapToDto(User user) 
     {
         return new UserResponseDto
         {
             Id = user.Id,
             Username = user.Username,
-            Email = user.Email,
+            Email = _encryptionService.Decrypt(user.Email),
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
     }
+
+    private string HashEmail(string email) => _encryptionService.Hash(email.Trim().ToLowerInvariant()); // Helper method to hash emails consistently
 }

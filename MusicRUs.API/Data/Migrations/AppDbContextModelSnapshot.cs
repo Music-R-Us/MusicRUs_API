@@ -914,8 +914,14 @@ namespace MusicRUs.API.Data.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("citext")
+                        .HasColumnType("text")
                         .HasColumnName("email");
+
+                    b.Property<string>("EmailHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("email_hash");
 
                     b.Property<string>("GoogleId")
                         .HasMaxLength(255)
@@ -938,9 +944,9 @@ namespace MusicRUs.API.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_users");
 
-                    b.HasIndex("Email")
+                    b.HasIndex("EmailHash")
                         .IsUnique()
-                        .HasDatabaseName("ix_users_email");
+                        .HasDatabaseName("ix_users_email_hash");
 
                     b.HasIndex("GoogleId")
                         .IsUnique()
