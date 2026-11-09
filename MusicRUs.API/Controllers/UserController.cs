@@ -3,6 +3,7 @@ using MusicRUs.API.DTOs;
 using MusicRUs.API.Services.Interfaces;
 using MusicRUs.API.Services;
 using MusicRUs.API.Backend.Logic.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MusicRUs.API.Controllers;
 
@@ -45,6 +46,24 @@ public class UserController : ControllerBase
     public async Task<ActionResult<UserResponseDto?>> GetUserById(int id)
     {
         var user = await _userService.GetUserByIdAsync(id);
+        if (user is null)
+        {
+            return NotFound();
+        }
+        return Ok(user);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    // Get Current User by JWT token
+    public async Task<ActionResult<UserResponseDto?>> GetCurrentUser()
+    {
+        var userId = User.GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+        var user = await _userService.GetUserByIdAsync(userId.Value);
         if (user is null)
         {
             return NotFound();

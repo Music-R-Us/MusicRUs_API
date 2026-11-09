@@ -12,6 +12,9 @@ using MusicRUs.API.Backend.Logic.Ticketmaster;
 using MusicRUs.API.Backend.Logic.Hashing;
 using System.Text;
 using MusicRUs.API.Backend.Logic.Jwt;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +39,27 @@ builder.Services.AddOptions<JwtOptions>()
         "Jwt:Issuer, Jwt:Audience og Jwt:ExpiresMinutes skal være sat i appsettings.json.")
     .ValidateOnStart();
 builder.Services.AddSingleton<ITokenService, TokenService>();
+var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()!;
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false; // Keep "sub" as "sub" instead of a long Microsoft claim name
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwt.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwt.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.SigningKey)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30),
+            NameClaimType = JwtRegisteredClaimNames.UniqueName
+        };
+    });
+builder.Services.AddAuthorization();
+
 
 // Google Auth
 builder.Services
@@ -153,6 +177,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors(FrontendCorsPolicy);
-app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();;
 app.MapControllers();
 app.Run();
