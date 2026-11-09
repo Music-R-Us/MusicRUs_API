@@ -8,7 +8,8 @@ public class User : IHasTimestamps
 {
     public int Id { get; set; }
     public string Username { get; set; } = null!;
-    public string Email { get; set; } = null!;
+    public string Email { get; set; } = null!; // Encrypted with AES-GCM ("nonce.cipher.tag")
+    public string EmailHash {get; set;} = null!; // HMAC-SHA256 of the lowercased email, used for lookup
     public string? PasswordHash { get; set; }   // Empty for Google users
     public string? GoogleId { get; set; }
     public DateTime CreatedAt { get; set; }
