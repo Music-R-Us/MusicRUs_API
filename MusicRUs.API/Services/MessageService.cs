@@ -8,13 +8,19 @@ namespace MusicRUs.API.Services;
 public class MessageService : IMessageService
 {
     private readonly IMessageRepository _messageRepo;
-    public MessageService(IMessageRepository messageRepo)
+    private readonly IUserBlockRepository _userBlockRepo;
+    public MessageService(IMessageRepository messageRepo, IUserBlockRepository userBlockRepo)
     {
         _messageRepo = messageRepo;
+        _userBlockRepo = userBlockRepo;
     }
 
     public async Task<MessageResponseDto> SendMessageAsync(int senderId, int recipientId, CreateMessageDto dto) // CREATE
     {
+        var isBlocked = await _userBlockRepo.IsBlockedEitherWayAsync(senderId, recipientId);
+        if (isBlocked)
+            throw new InvalidOperationException("Cannot send message. Either you or the recepient is blocked.");
+
         var message = new Message
         {
             SenderId = senderId,
@@ -58,7 +64,8 @@ public class MessageService : IMessageService
 
         message.ReadAt = DateTime.UtcNow;
         await _messageRepo.SaveChangesAsync();
-        return MapToDto(message);
+        var saved = await _messageRepo.GetByIdAsync(messageId);
+        return MapToDto(saved!);
     }
 
     public async Task<bool> DeleteMessageAsync(int messageId, int userId) // DELETE

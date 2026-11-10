@@ -59,7 +59,7 @@ public class ForumProfileController : ControllerBase
     {
         var fp = await _fpService.UpdateFpAsync(userId, dto);
 
-        if(dto == null)
+        if(fp == null)
             return NotFound();
         
         return Ok(fp);
