@@ -29,10 +29,10 @@ public class ArtistController : ControllerBase
         
         return Ok(artist);
     }
-    
+ 
     // Get Artist by Name
     [HttpGet("by-name")]
-    public async Task<ActionResult<ArtistWithAlbumsResponseDto?>> GetArtistByNameAsync(string name)
+    public async Task<ActionResult<ArtistWithAlbumsResponseDto?>> GetArtistByNameAsync(string name) 
     {
         var artist = await _artistService.GetArtistByNameAsync(name);
         if(artist == null)

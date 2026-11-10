@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 /// O: The interface is generic and can be reused for new entity types without modifying it.
 /// L: Every implementation (Repository<T> and derived <X>Repository.cs) must follow this contract, (example: GetByIdAsync returns null if the row is not found.)
 /// I: Read operations are separated from write operations (IRepository<T>). 
-/// D: Services that only read data depend on this interface (IReadRepository<T>), instead of the concrete Repository<T> class.
+/// D: Higher level classes (Services) will depend on this interface (IReadRepository<T>), instead of the concrete Repository<T> class.
 ///////////////////////////////////////
 
 namespace MusicRUs.API.Repositories.Interfaces

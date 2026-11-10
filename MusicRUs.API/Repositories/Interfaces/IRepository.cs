@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 /// O: The interface extends IReadRepository<T> and is generic, so it can be reused for new entity types without modifying it.
 /// L: Every implementation (Repository<T> and derived <X>Repository.cs) can replace IRepository<T>.
 /// I: Write operations are kept here, while read operations are in IReadRepository<T>. Data model specific methods are kept in the derived interfaces (I<X>Repository.cs).
-/// D: Services that need to change data depend on this interface (IRepository<T>), instead of the concrete Repository<T> class.
+/// D: Higher level classes (Services) will depend on this interface (IRepository<T>), instead of the concrete Repository<T> class.
 ///////////////////////////////////////
 
 namespace MusicRUs.API.Repositories.Interfaces
