@@ -4,7 +4,8 @@ using MusicRUs.API.Services.Interfaces;
 using MusicRUs.API.Services;
 using MusicRUs.API.Backend.Logic.Jwt;
 using Microsoft.AspNetCore.Authorization;
-
+using System.Security.Claims;
+using Microsoft.IdentityModel.JsonWebTokens;
 namespace MusicRUs.API.Controllers;
 
 [ApiController]
@@ -14,12 +15,14 @@ public class UserController : ControllerBase
     private readonly IUserService _userService;
     private readonly IForumProfileService _fpService;
     private readonly ITokenService _tokenService;
+    private readonly ITokenDenylist _tokenDenylist;
 
-    public UserController(IUserService userService, IForumProfileService fpService, ITokenService tokenService)
+    public UserController(IUserService userService, IForumProfileService fpService, ITokenService tokenService, ITokenDenylist tokenDenylist)
     {
         _userService = userService;
         _fpService = fpService;
         _tokenService = tokenService;
+        _tokenDenylist = tokenDenylist;
     }
 
     // Implement the endpoints for user-related operations
@@ -93,6 +96,20 @@ public class UserController : ControllerBase
             return Unauthorized("Invalid email or password.");
         }
         return Ok(_tokenService.CreateAuthResponse(user));
+    }
+
+    // Logout: revoke the current token until it would have expired
+    [Authorize]
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
+        var exp = User.FindFirstValue(JwtRegisteredClaimNames.Exp);
+        if (jti is null || !long.TryParse(exp, out var expSeconds))
+            return Unauthorized();
+
+        _tokenDenylist.Revoke(jti, DateTimeOffset.FromUnixTimeSeconds(expSeconds));
+        return NoContent();
     }
 
     //Search users by username keyword
