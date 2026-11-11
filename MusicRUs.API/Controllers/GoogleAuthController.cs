@@ -4,6 +4,7 @@ using MusicRUs.API.DTOs;
 using MusicRUs.API.Services.Interfaces;
 using MusicRUs.API.Backend.Logic.Jwt;
 using MusicRUs.API.Services;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace MusicRUs.API.Controllers;
 
@@ -23,7 +24,7 @@ public class GoogleAuthController : ControllerBase
         _fpService = fpService;
         _tokenService = tokenService;
     }
-
+    [EnableRateLimiting("auth")]
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> GoogleLogin([FromBody] GoogleLoginDto dto)
     {
