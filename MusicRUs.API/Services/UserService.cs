@@ -27,9 +27,7 @@ public class UserService : IUserService
     {
         var emailHash = HashEmail(dto.Email);
         if (await _userRepo.EmailExistsAsync(emailHash) || await _userRepo.UsernameExistsAsync(dto.Username))
-        {
-            return null; // User with the same email or username already exists
-        }
+            throw new InvalidOperationException("User with the same email or username already exists");
 
         // Create new User entity
         var user = new User // Map properties from dto to entity
@@ -89,20 +87,27 @@ public class UserService : IUserService
     public async Task<UserResponseDto?> GetUserByIdAsync(int id) // READ
     {
         var user = await _userRepo.GetByIdAsync(id);
-        return user is null ? null : MapToDto(user);
+        if(user == null)
+            throw new KeyNotFoundException("User not found");
+
+        return MapToDto(user);
     }
 
     public async Task<UserResponseDto?> GetCurrentUserByIdAsync(int id) // READ
     {
         var user = await _userRepo.GetByIdAsync(id);
-        return user is null ? null : MapCurrentToDto(user);
+        if(user == null)
+            throw new KeyNotFoundException("User not found");
+
+        return MapCurrentToDto(user);
     }
 
     public async Task<UserResponseDto?> GetUserByUsernameAndPasswordAsync(string username, string password) // READ
     {
         var user = await _userRepo.GetUserByUsernameAsync(username);
         if (user?.PasswordHash is null || !_passwordHasher.Verify(password, HashedPassword.FromStoredHash(user.PasswordHash)))
-            return null;
+            throw new InvalidOperationException("Invalid username or password");
+        
         return MapToDto(user);
     }
 
@@ -110,9 +115,7 @@ public class UserService : IUserService
     {
         var user = await _userRepo.GetUserByEmailAsync(HashEmail(email));
         if (user?.PasswordHash is null || !_passwordHasher.Verify(password, HashedPassword.FromStoredHash(user.PasswordHash)))
-        {
-            return null; // User not found or password mismatch
-        }
+            throw new InvalidOperationException("Invalid email or password"); 
         return MapToDto(user);
     }
 
@@ -126,9 +129,8 @@ public class UserService : IUserService
     {
         var user = await _userRepo.GetByIdAsync(id); 
         if (user is null)
-        {
-            return null; // User not found
-        }
+            throw new KeyNotFoundException("User not found");
+
         user.Username = dto.NewUsername;
         user.UpdatedAt = DateTime.UtcNow;
         _userRepo.Update(user);
@@ -185,7 +187,7 @@ public class UserService : IUserService
         var user = await _userRepo.GetByIdAsync(id);
         if (user is null)
         {
-            return false; // User not found
+            throw new KeyNotFoundException("User not found");
         }
         else
         {

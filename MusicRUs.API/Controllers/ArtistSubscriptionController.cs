@@ -57,10 +57,10 @@ public class ArtistSubscriptionController : ControllerBase
 
     // Get all artist subscriptions for a user
     [HttpGet("user/{userId:int}")]
-    public async Task<ActionResult<IEnumerable<ArtistSubscriptionResponseDto>>> GetAllSubscriptionsByUser(int userId)
+    public async Task<ActionResult<List<ArtistSubscriptionResponseDto>>> GetAllSubscriptionsByUser(int userId)
     {
-        var result = await _asService.GetAllSubscriptionsByUserAsync(userId);
-        return Ok(result);
+        var subscriptions = await _asService.GetAllSubscriptionsByUserAsync(userId);
+        return Ok(subscriptions);
     }
 
     // UPDATE

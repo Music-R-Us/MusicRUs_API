@@ -35,13 +35,20 @@ public class UserController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<AuthResponseDto>> CreateUser([FromBody] CreateUserDto dto)
     {
-        var user = await _userService.CreateUserAsync(dto);
-        if (user is null)
+        try
         {
-            return Conflict("User with the same email or username already exists.");
+            var user = await _userService.CreateUserAsync(dto);
+            if (user is null)
+            {
+                return Conflict("User with the same email or username already exists.");
+            }
+            var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
+            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, _tokenService.CreateAuthResponse(user));
         }
-        var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
-        return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, _tokenService.CreateAuthResponse(user));
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
     }
 
     // READ
@@ -128,18 +135,27 @@ public class UserController : ControllerBase
     // UPDATE
     //##############################################################################
     // Update Username
-    [HttpPatch("updateUsername/{id:int}")]
-    public async Task<ActionResult<UserResponseDto?>> UpdateUsername(int id, [FromBody] UpdateUsernameDto dto)
+    [Authorize]
+    [HttpPatch("updateUsername/me")]
+    public async Task<ActionResult<UserResponseDto?>> UpdateUsername([FromBody] UpdateUsernameDto dto)
     {
-        var user = await _userService.UpdateUsernameAsync(id, dto);
-        if (user is null)
+        try
         {
-            return NotFound();
+            var userId = User.GetUserId();
+            if (userId is null)
+                return Unauthorized();
+
+            var user = await _userService.UpdateUsernameAsync(userId.Value, dto);
+            return Ok(user);
         }
-        return Ok(user);
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // Update email
+    [Authorize]
     [EnableRateLimiting("auth")]
     [HttpPatch("updateEmail/{id:int}")]
     public async Task<ActionResult<UserResponseDto?>> UpdateEmail(int id, [FromBody] UpdateEmailDto dto)
@@ -159,6 +175,7 @@ public class UserController : ControllerBase
     }
 
     // Update password
+    [Authorize]
     [EnableRateLimiting("auth")]
     [HttpPatch("updatePassword/{id:int}")]
     public async Task<ActionResult<UserResponseDto?>> UpdatePassword(int id, [FromBody] UpdatePasswordDto dto)
@@ -178,6 +195,7 @@ public class UserController : ControllerBase
     // DELETE
     //##############################################################################
     // Delete User by ID
+    [Authorize]
     [HttpDelete("{id:int}")]
     public async Task<ActionResult> DeleteUserById(int id)
     {
