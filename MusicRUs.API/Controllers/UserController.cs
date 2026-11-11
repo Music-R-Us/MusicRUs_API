@@ -68,7 +68,7 @@ public class UserController : ControllerBase
         {
             return Unauthorized();
         }
-        var user = await _userService.GetUserByIdAsync(userId.Value);
+        var user = await _userService.GetCurrentUserByIdAsync(userId.Value);
         if (user is null)
         {
             return NotFound();

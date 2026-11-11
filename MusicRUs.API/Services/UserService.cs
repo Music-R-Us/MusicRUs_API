@@ -92,6 +92,12 @@ public class UserService : IUserService
         return user is null ? null : MapToDto(user);
     }
 
+    public async Task<UserResponseDto?> GetCurrentUserByIdAsync(int id) // READ
+    {
+        var user = await _userRepo.GetByIdAsync(id);
+        return user is null ? null : MapCurrentToDto(user);
+    }
+
     public async Task<UserResponseDto?> GetUserByUsernameAndPasswordAsync(string username, string password) // READ
     {
         var user = await _userRepo.GetUserByUsernameAsync(username);
@@ -193,6 +199,17 @@ public class UserService : IUserService
 
     // Helper method to map User entity to UserResponseDto (MapToDto)
     private UserResponseDto MapToDto(User user) 
+    {
+        return new UserResponseDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            //CreatedAt = user.CreatedAt,
+            //UpdatedAt = user.UpdatedAt
+        };
+    }
+
+    private UserResponseDto MapCurrentToDto(User user) 
     {
         return new UserResponseDto
         {
