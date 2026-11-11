@@ -17,6 +17,8 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using MusicRUs.API.Backend.Logic.Encryption;
 using System.Security.Claims;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +75,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Services.AddAuthorization();
+
+// Rate limiting: max 5 attempts per minute per IP on login, signup and password/e-mail changes
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: GetClientIp(context),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
 
 // Encryption
 builder.Services.AddOptions<EncryptionOptions>()
@@ -198,7 +215,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors(FrontendCorsPolicy);
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();;
 app.MapControllers();
 app.Run();
+
+
+// Gets the user's IP address. Once hosted on the server, Cloudflare puts it in the CF-Connecting-IP header.
+// Locally we use the connection's IP instead.
+static string GetClientIp(HttpContext context) =>
+    context.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
+    ?? context.Connection.RemoteIpAddress?.ToString()
+    ?? "unknown";

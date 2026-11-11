@@ -3,6 +3,7 @@ using MusicRUs.API.Backend.Logic.GoogleAuth;
 using MusicRUs.API.DTOs;
 using MusicRUs.API.Services.Interfaces;
 using MusicRUs.API.Backend.Logic.Jwt;
+using MusicRUs.API.Services;
 
 namespace MusicRUs.API.Controllers;
 
@@ -30,9 +31,11 @@ public class GoogleAuthController : ControllerBase
         if(googleUser == null)
             return Unauthorized(new { message = "Invalid Google ID token."});
         
-        var user = await _userService.GoogleLoginAsync(googleUser);
-        if(user == null)
-            return StatusCode(500, new { message = "Unable to create or find user."});
+        var result = await _userService.GoogleLoginAsync(googleUser);
+        if (result.Error == UpdateUserError.EmailInUse)
+            return Conflict(new { message = "An account with this e-mail already exists. Log in with your password." });
+
+        var user = result.User!;
         
         await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
 

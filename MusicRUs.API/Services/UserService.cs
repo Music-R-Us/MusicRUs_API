@@ -46,28 +46,34 @@ public class UserService : IUserService
         return MapToDto(user);
     }
 
-    public async Task<UserResponseDto?> GoogleLoginAsync(GoogleUserInfo googleUser) // CREATE, READ or UPDATE
+    public async Task<UpdateUserResult> GoogleLoginAsync(GoogleUserInfo googleUser)
     {
         // Check if user exists and return existing user
         var user = await _userRepo.GetByGoogleIdAsync(googleUser.GoogleId);
-        if (user is not null) 
+        if (user is not null)
         {
-            return MapToDto(user); 
+            return UpdateUserResult.Ok(MapToDto(user));
         }
-        
-        // Check if user exists via email and return existing user
+
+        // Never link automatically by e-mail: anyone can sign up with someone else's e-mail
+        // without verifying it, so linking would let an attacker share the victim's account
         user = await _userRepo.GetUserByEmailAsync(HashEmail(googleUser.Email));
         if (user is not null)
         {
-            user.GoogleId = googleUser.GoogleId; // Link Google ID to existing user
-            await _userRepo.SaveChangesAsync();
-            return MapToDto(user);
+            return UpdateUserResult.Fail(UpdateUserError.EmailInUse);
         }
 
         // Create new user if not found
+        // Google names are not unique, so find a free username (fx "Mark1")
+        var baseName = string.IsNullOrWhiteSpace(googleUser.Name) ? "user" : googleUser.Name.Trim();
+        var username = baseName;
+        var suffix = 1;
+        while (await _userRepo.UsernameExistsAsync(username))
+            username = $"{baseName}{suffix++}";
+
         user = new User
         {
-            Username = googleUser.Name,
+            Username = username,
             Email = _encryptionService.Encrypt(googleUser.Email.Trim()),
             EmailHash = HashEmail(googleUser.Email),
             PasswordHash = null, // No password for Google login
@@ -77,7 +83,7 @@ public class UserService : IUserService
         };
         await _userRepo.AddAsync(user);
         await _userRepo.SaveChangesAsync();
-        return MapToDto(user);
+        return UpdateUserResult.Ok(MapToDto(user));
     }
 
     public async Task<UserResponseDto?> GetUserByIdAsync(int id) // READ
