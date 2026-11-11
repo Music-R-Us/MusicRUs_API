@@ -9,7 +9,7 @@ public interface IUserService
     Task<UserResponseDto?> CreateUserAsync(CreateUserDto dto); // CREATE
     
     // GOOGLE LOGIN
-    Task<UserResponseDto?> GoogleLoginAsync(GoogleUserInfo googleUser); // CREATE, READ or UPDATE
+    Task<UpdateUserResult> GoogleLoginAsync(GoogleUserInfo googleUser); // CREATE or READ
     Task<UserResponseDto?> GetUserByIdAsync(int id); // READ
     Task<UserResponseDto?> GetUserByUsernameAndPasswordAsync(string username, string password); // READ
     Task<UserResponseDto?> GetUserByEmailAndPasswordAsync(string email, string password); // READ

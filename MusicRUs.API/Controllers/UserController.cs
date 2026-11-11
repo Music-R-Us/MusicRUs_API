@@ -6,6 +6,7 @@ using MusicRUs.API.Backend.Logic.Jwt;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.AspNetCore.RateLimiting;
 namespace MusicRUs.API.Controllers;
 
 [ApiController]
@@ -30,6 +31,7 @@ public class UserController : ControllerBase
     // CREATE
     //##############################################################################
     // Create User
+    [EnableRateLimiting("auth")]
     [HttpPost]
     public async Task<ActionResult<AuthResponseDto>> CreateUser([FromBody] CreateUserDto dto)
     {
@@ -75,6 +77,7 @@ public class UserController : ControllerBase
     }
 
     // Get User by username and password
+    [EnableRateLimiting("auth")]
     [HttpPost("login/username")]
     public async Task<ActionResult<AuthResponseDto>> GetUserByUsernameAndPassword([FromBody] UsernameLoginDto dto)
     {
@@ -87,6 +90,7 @@ public class UserController : ControllerBase
     }
 
     // Get User by email and password
+    [EnableRateLimiting("auth")]
     [HttpPost("login/email")]
     public async Task<ActionResult<AuthResponseDto>> GetUserByEmailAndPassword([FromBody] EmailLoginDto dto)
     {
@@ -136,6 +140,7 @@ public class UserController : ControllerBase
     }
 
     // Update email
+    [EnableRateLimiting("auth")]
     [HttpPatch("updateEmail/{id:int}")]
     public async Task<ActionResult<UserResponseDto?>> UpdateEmail(int id, [FromBody] UpdateEmailDto dto)
     {
@@ -154,6 +159,7 @@ public class UserController : ControllerBase
     }
 
     // Update password
+    [EnableRateLimiting("auth")]
     [HttpPatch("updatePassword/{id:int}")]
     public async Task<ActionResult<UserResponseDto?>> UpdatePassword(int id, [FromBody] UpdatePasswordDto dto)
     {

@@ -24,6 +24,11 @@ public class GoogleAuthService : IGoogleAuthService
             };
 
             var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
+            if (!payload.EmailVerified)          // Only trust the e-mail if Google has verified that the user owns it
+            {
+                _logger.LogWarning("Google login rejected because the e-mail is not verified.");
+                return null;
+            }
 
             return new GoogleUserInfo
             {
