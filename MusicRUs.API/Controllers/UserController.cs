@@ -81,12 +81,14 @@ public class UserController : ControllerBase
     [HttpPost("login/username")]
     public async Task<ActionResult<AuthResponseDto>> GetUserByUsernameAndPassword([FromBody] UsernameLoginDto dto)
     {
-        var user = await _userService.GetUserByUsernameAndPasswordAsync(dto.Username, dto.Password);
-        if (user is null)
-        {
+        var result = await _userService.GetUserByUsernameAndPasswordAsync(dto.Username, dto.Password);
+        if (result.Status == LoginStatus.AccountLocked)
+            return StatusCode(StatusCodes.Status423Locked,
+                new { message = "Account temporarily locked due to too many failed attempts.", lockedUntil = result.LockedUntil });
+        if (result.Status != LoginStatus.Success)
             return Unauthorized("Invalid username or password.");
-        }
-        return Ok(_tokenService.CreateAuthResponse(user));
+
+        return Ok(_tokenService.CreateAuthResponse(result.User!));
     }
 
     // Get User by email and password
@@ -94,12 +96,14 @@ public class UserController : ControllerBase
     [HttpPost("login/email")]
     public async Task<ActionResult<AuthResponseDto>> GetUserByEmailAndPassword([FromBody] EmailLoginDto dto)
     {
-        var user = await _userService.GetUserByEmailAndPasswordAsync(dto.Email, dto.Password);
-        if (user is null)
-        {
+        var result = await _userService.GetUserByEmailAndPasswordAsync(dto.Email, dto.Password);
+        if (result.Status == LoginStatus.AccountLocked)
+            return StatusCode(StatusCodes.Status423Locked,
+                new { message = "Account temporarily locked due to too many failed attempts.", lockedUntil = result.LockedUntil });
+        if (result.Status != LoginStatus.Success)
             return Unauthorized("Invalid email or password.");
-        }
-        return Ok(_tokenService.CreateAuthResponse(user));
+
+        return Ok(_tokenService.CreateAuthResponse(result.User!));
     }
 
     // Logout: revoke the current token until it would have expired

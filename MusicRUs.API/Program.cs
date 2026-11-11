@@ -19,6 +19,7 @@ using MusicRUs.API.Backend.Logic.Encryption;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using MusicRUs.API.Backend.Logic.TwoFactor;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,10 @@ builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>(
 
 // Hashing
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+
+// Two-factor authentication
+builder.Services.AddSingleton<ITotpService, TotpService>();
+builder.Services.AddScoped<ITwoFactorService, TwoFactorService>();
 
 // JWT
 builder.Services.AddOptions<JwtOptions>()
