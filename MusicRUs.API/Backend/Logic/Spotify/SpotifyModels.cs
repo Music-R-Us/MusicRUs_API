@@ -30,6 +30,7 @@ public class SpotifyPage<T>
 public class SpotifySearchResult
 {
     public SpotifyPage<SpotifyArtist>? Artists { get; init; }
+    public SpotifyPage<SpotifyAlbum>? Albums { get; init; }
 }
 
 public class SpotifyArtistRef

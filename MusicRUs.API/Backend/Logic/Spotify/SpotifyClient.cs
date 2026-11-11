@@ -36,6 +36,13 @@ public class SpotifyClient : ISpotifyClient
         return result?.Artists?.Items ?? [];
     }
 
+    public async Task<IReadOnlyList<SpotifyAlbum>> SearchAlbumsAsync(string query)
+    {
+        var result = await GetAsync<SpotifySearchResult>(
+            $"v1/search?type=album&market={Market}&limit=10&q={Uri.EscapeDataString(query)}");
+        return result?.Albums?.Items ?? [];
+    }
+
     public Task<SpotifyArtist?> GetArtistAsync(string spotifyId)
         => GetAsync<SpotifyArtist>($"v1/artists/{spotifyId}");
 

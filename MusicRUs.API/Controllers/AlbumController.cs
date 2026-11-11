@@ -8,9 +8,9 @@ namespace MusicRUs.API.Controllers;
 [Route("api/[controller]")]
 public class AlbumController : ControllerBase
 {
-    private readonly IAlbumService _albumService;
+    private readonly IAlbumService _albumService; 
 
-    public AlbumController(IAlbumService albumService)
+    public AlbumController(IAlbumService albumService) 
     {
         _albumService = albumService;
     }
@@ -23,10 +23,17 @@ public class AlbumController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<AlbumDetailsResponseDto?>> GetAlbumByIdAsync(int id)
     {
-        var album = await _albumService.GetAlbumByIdAsync(id);
-        if (album == null)
-            return NotFound();
-        return Ok(album);
+        try
+        {
+            var album = await _albumService.GetAlbumByIdAsync(id);
+            if (album == null)
+                return NotFound();
+            return Ok(album);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound($"{ex.Message}");
+        }
     }
     
     // Get Album by Spotify ID

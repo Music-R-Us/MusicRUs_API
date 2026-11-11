@@ -25,20 +25,27 @@ public class MessageController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<MessageResponseDto>> SendMessage(int senderId, int recipientId, [FromBody] CreateMessageDto Dto)
     {
-        var senderExists = await _userService.GetUserByIdAsync(senderId); // Check if sender exists
-        if (senderExists == null)
-            return NotFound("Sender not found");
-
-        var recipientExists = await _userService.GetUserByIdAsync(recipientId); // Check if recipient exists
-        if (recipientExists == null)
-            return NotFound("Recipient not found");
-
-        var message = await _messageService.SendMessageAsync(senderExists.Id, recipientExists.Id, Dto);
-        if (message == null)
+        try
         {
-            return BadRequest("Failed to send message");
+            var senderExists = await _userService.GetUserByIdAsync(senderId); // Check if sender exists
+            if (senderExists == null)
+                return NotFound("Sender not found");
+
+            var recipientExists = await _userService.GetUserByIdAsync(recipientId); // Check if recipient exists
+            if (recipientExists == null)
+                return NotFound("Recipient not found");
+
+            var message = await _messageService.SendMessageAsync(senderExists.Id, recipientExists.Id, Dto);
+            if (message == null)
+            {
+                return BadRequest("Failed to send message");
+            }
+            return Ok(message);
         }
-        return Ok(message);
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     // READ

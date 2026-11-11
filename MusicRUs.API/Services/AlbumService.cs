@@ -24,7 +24,7 @@ public class AlbumService : IAlbumService
         await TryImportAsync(() => _catalogImportService.ImportAlbumTracksAsync(id)); // Fetch tracks from Spotify on first view
         var album = await _albumRepo.GetByIdAsync(id); // Overriden to include artists and tracks
         if(album == null)
-            return null;
+            throw new KeyNotFoundException($"Album with ID {id} not found.");
         
         return MapToDetailsDto(album);
     }
@@ -60,8 +60,17 @@ public class AlbumService : IAlbumService
 
     public async Task<IEnumerable<AlbumResponseDto>> SearchAlbumsByKeywordAsync(string keyword) // READ
     {
-        var albums = await _albumRepo.SearchAlbumsByKeywordAsync(keyword);
-        return albums.Select(MapToDto).ToList();
+        try
+        {
+            var albums = await _catalogImportService.SearchAlbumsAsync(keyword);
+            return albums.Select(MapToDto).ToList();
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            _logger.LogWarning(ex, "Spotify search failed. Searching the database only.");
+            var albums = await _albumRepo.SearchAlbumsByKeywordAsync(keyword);
+            return albums.Select(MapToDto).ToList();
+        }
     }
 
     private async Task TryImportAsync(Func<Task> import)

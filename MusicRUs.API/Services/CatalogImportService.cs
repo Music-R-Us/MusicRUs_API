@@ -38,6 +38,17 @@ public class CatalogImportService : ICatalogImportService
         return artists;
     }
 
+    public async Task<IReadOnlyList<Album>> SearchAlbumsAsync(string query)
+    {
+        var found = await _spotify.SearchAlbumsAsync(query);
+        var albums = new List<Album>();
+        foreach (var spotifyAlbum in found)
+            albums.Add(await UpsertAlbumAsync(spotifyAlbum));
+
+        await _catalog.SaveChangesAsync();
+        return albums;
+    }
+
     public async Task ImportArtistAlbumsAsync(int artistId)
     {
         var cacheKey = $"spotify:artist-albums:{artistId}";
