@@ -66,7 +66,7 @@ public class ForumProfileController : ControllerBase
         try
         {
             var userId = User.GetUserId();
-            if (!userId.HasValue)
+            if (userId == null)
                 return Unauthorized();
 
             var fp = await _fpService.GetFpByCurrentUserIdAsync(userId.Value);
@@ -95,7 +95,7 @@ public class ForumProfileController : ControllerBase
         try
         {
             var userId = User.GetUserId();
-            if (!userId.HasValue)
+            if (userId == null)
                 return Unauthorized();
 
             var fp = await _fpService.UpdateFpAsync(userId.Value, dto);

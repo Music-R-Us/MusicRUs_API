@@ -7,6 +7,7 @@ public interface IFriendshipService
 {
     Task<FriendshipResponseDto> CreateFsAsync(int requesterId, int addresseeId); // CREATE
     //Task<FriendshipResponseDto> GetFsByRequesterAndAddresseeIdAsync(int requesterId, int addresseeId); // READ
+    Task<FriendshipResponseDto> GetFsByIdAsync(int id); // READ
     Task<List<FriendshipResponseDto>> GetFsListByUserIdAsync(int userId); // READ
     Task<List<FriendshipResponseDto>> GetPendingFsListByUserIdAsync(int userId); // READ
     Task<FriendshipResponseDto> AcceptFsAsync(int id, int userId); // UPDATE

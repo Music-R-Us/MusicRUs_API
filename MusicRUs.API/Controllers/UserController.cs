@@ -77,9 +77,8 @@ public class UserController : ControllerBase
         {
             var userId = User.GetUserId();
             if (userId is null)
-            {
                 return Unauthorized();
-            }
+
             var user = await _userService.GetCurrentUserByIdAsync(userId.Value);
             return Ok(user);
         }

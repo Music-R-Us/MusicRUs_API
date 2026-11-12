@@ -21,7 +21,7 @@ public class FriendshipService : IFriendshipService
     {
         var existingFs = await _fsRepo.GetFsByRequesterAndAddresseeIdAsync(requesterId, addresseeId) ?? await _fsRepo.GetFsByRequesterAndAddresseeIdAsync(addresseeId, requesterId);
         if(existingFs != null)
-            return null!;
+            throw new InvalidOperationException("Friendship already exists.");
 
         var fs = new Friendship
         {
@@ -36,6 +36,14 @@ public class FriendshipService : IFriendshipService
         return MapToDto(saved!);
     }
 
+    public async Task<FriendshipResponseDto> GetFsByIdAsync(int id) // READ
+    {
+        var fs = await _fsRepo.GetByIdAsync(id);
+        if(fs == null)
+            throw new KeyNotFoundException("Friendship not found.");
+        
+        return MapToDto(fs);
+    }
 
     public async Task<List<FriendshipResponseDto>> GetFsListByUserIdAsync(int userId) // READ
     {
@@ -93,9 +101,8 @@ public class FriendshipService : IFriendshipService
     {
         var fs = await _fsRepo.GetFsByRequesterAndAddresseeIdAsync(requesterId, addresseeId) ?? await _fsRepo.GetFsByRequesterAndAddresseeIdAsync(addresseeId, requesterId);
         if(fs == null)
-        {
-            return false;
-        }
+            throw new KeyNotFoundException("Friendship not found.");
+
         _fsRepo.Delete(fs);
 
         await _fsRepo.SaveChangesAsync();

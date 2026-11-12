@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using MusicRUs.API.Services.Interfaces;
+using MusicRUs.API.Backend.Logic.Jwt;
 using MusicRUs.API.DTOs;
 
 namespace MusicRUs.API.Controllers;
 
 [ApiController]
-//[Authorize]
+[Authorize]
 [Route("api/[controller]")]
 public class FriendshipController : ControllerBase
 {
@@ -22,69 +23,103 @@ public class FriendshipController : ControllerBase
     // CREATE
     //##############################################################################
     // Create Friendship between requestor and addressee
-    [HttpPost("CreateFs/{requesterId:int}/{addresseeId:int}")]
-    public async Task<ActionResult<FriendshipResponseDto>> CreateFs(int requesterId, int addresseeId)
+    [HttpPost("CreateFs/Addressee/{addresseeId:int}")]
+    public async Task<ActionResult<FriendshipResponseDto>> CreateFs(int addresseeId)
     {
-        var fs = await _fsService.CreateFsAsync(requesterId, addresseeId);
-        if (fs == null)
-            return BadRequest();
-
-        return Ok(fs);
+        try
+        {
+            var userId = User.GetUserId();
+            if (userId == null)
+                return Unauthorized();
+            
+            var fs = await _fsService.CreateFsAsync(userId.Value, addresseeId);
+            return Ok(fs);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
     }
 
     // READ
     //##############################################################################
     // Get pending friendship requests for the current user
-    [HttpGet("PendingFs-By-AddresseeId/{userId:int}")]
-    public async Task<ActionResult<List<FriendshipResponseDto>>> GetPendingFsListByUserId(int userId)
+    [HttpGet("PendingFs-By-AddresseeId")]
+    public async Task<ActionResult<List<FriendshipResponseDto>>> GetPendingFsListByUserId()
     {
-        var fsList = await _fsService.GetPendingFsListByUserIdAsync(userId);
+        var userId = User.GetUserId();
+        if (userId == null)
+            return Unauthorized();
+
+        var fsList = await _fsService.GetPendingFsListByUserIdAsync(userId.Value);
         return Ok(fsList);
     }
 
     // Get all friendships for the current user
-    [HttpGet("FsList-By-UserId/{userId:int}")]
-    public async Task<ActionResult<List<FriendshipResponseDto>>> GetFsListByUserId(int userId)
+    [HttpGet("FsList-By-RequesterId")]
+    public async Task<ActionResult<List<FriendshipResponseDto>>> GetFsListByUserId()
     {
-        var fsList = await _fsService.GetFsListByUserIdAsync(userId);
+        var userId = User.GetUserId();
+        if (userId == null)
+            return Unauthorized();
+
+        var fsList = await _fsService.GetFsListByUserIdAsync(userId.Value);
         return Ok(fsList);
     }
 
     // UPDATE
     //##############################################################################
     // Accept friendship request
-    [HttpPatch("AcceptFs/{id:int}/{userId:int}")]
-    public async Task<ActionResult<FriendshipResponseDto>> AcceptFs(int id, int userId)
+    [HttpPatch("AcceptFs/{id:int}/me")]
+    public async Task<ActionResult<FriendshipResponseDto>> AcceptFs(int id)
     {
         try
         {
-            var fs = await _fsService.AcceptFsAsync(id, userId);
-            if (fs == null)
-                return NotFound();
+            var userId = User.GetUserId();
+            if (userId == null)
+                return Unauthorized();
 
+            var fs = await _fsService.AcceptFsAsync(id, userId.Value);
             return Ok(fs);
         }
         catch (ArgumentException ex)
         {
             return BadRequest(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
         }
     }
 
     // Reject friendship request
-    [HttpPatch("RejectFs/{id:int}/{userId:int}")]
-    public async Task<ActionResult<FriendshipResponseDto>> RejectFs(int id, int userId)
+    [HttpPatch("RejectFs/{id:int}/me")]
+    public async Task<ActionResult<FriendshipResponseDto>> RejectFs(int id)
     {
         try
         {
-            var fs = await _fsService.RejectFsAsync(id, userId);
-            if (fs == null)
-                return NotFound();
+            var userId = User.GetUserId();
+            if (userId == null)
+                return Unauthorized();
 
+            var fs = await _fsService.RejectFsAsync(id, userId.Value);
             return Ok(fs);
         }
         catch (ArgumentException ex)
         {
             return BadRequest(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
         }
     }
 
@@ -92,13 +127,28 @@ public class FriendshipController : ControllerBase
     // DELETE
     //##############################################################################
     // Delete a friendship by ID
-    [HttpDelete("DeleteFs/{requesterId:int}/{addresseeId:int}")]
-    public async Task<ActionResult> DeleteFs(int requesterId, int addresseeId)
+    [HttpDelete("DeleteFs/{id:int}")]
+    public async Task<ActionResult> DeleteFs(int id)
     {
-        var success = await _fsService.DeleteFsAsync(requesterId, addresseeId);
-        if (!success)
-            return NotFound();
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+            
+            var fs = await _fsService.GetFsByIdAsync(id);
+            var requesterId = fs.RequesterId;
+            var addresseeId = fs.AddresseeId;
 
-        return NoContent();
+            var success = await _fsService.DeleteFsAsync(requesterId, addresseeId);
+            if (!success)
+                return NotFound();
+
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 }
