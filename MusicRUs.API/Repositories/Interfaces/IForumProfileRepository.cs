@@ -7,5 +7,5 @@ public interface IForumProfileRepository : IRepository<ForumProfile>
 {
     Task<ForumProfile?> GetFpByUserIdAsync(int userId);
     Task<ForumProfile?> GetWithFavoritesAsync(int userId);
-    Task<IEnumerable<ForumProfile>> SearchFpByKeywordAsync(string keyword); // searching profiles by displayname keywords
+    Task<IEnumerable<ForumProfile>> SearchPublicFpByKeywordAsync(string keyword); // searching profiles by displayname keywords
 }

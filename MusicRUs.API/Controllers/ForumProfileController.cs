@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using MusicRUs.API.Data;
 using MusicRUs.API.DTOs;
 using MusicRUs.API.Models.Entities;
+using MusicRUs.API.Backend.Logic.Jwt;
+using Microsoft.AspNetCore.Authorization;
 using MusicRUs.API.Services.Interfaces;
 
 namespace MusicRUs.API.Controllers;
@@ -25,10 +27,15 @@ public class ForumProfileController : ControllerBase
     [HttpPost("CreateForumProfile/{userId:int}")]
     public async Task<ActionResult<ForumProfileResponseDto>> CreateFp([FromBody] CreateForumProfileDto dto)
     {
-        var fp = await _fpService.CreateFpAsync(dto);
-        if(fp == null)
-            return Conflict("Profile for the current user already exist.");
-        return CreatedAtAction(nameof(CreateFp), new {id = fp.Id}, fp);
+        try
+        {
+            var fp = await _fpService.CreateFpAsync(dto);
+            return CreatedAtAction(nameof(CreateFp), new {id = fp!.Id}, fp);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
     }
 
     // READ
@@ -37,31 +44,70 @@ public class ForumProfileController : ControllerBase
     [HttpGet("user/{userId:int}")]
     public async Task<ActionResult<ForumProfileResponseDto>> GetFpByUserId(int userId)
     {
-        var fp = await _fpService.GetFpByUserIdAsync(userId);
-        if(fp == null)
-            return NotFound();
+        try
+        {
+            var fp = await _fpService.GetFpByUserIdAsync(userId);
+            return Ok(fp);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
+    }
 
-        return Ok(fp);
+    [Authorize]
+    [HttpGet("forumProfile/me")]
+    public async Task<ActionResult<ForumProfileResponseDto>> GetFpByCurrentUser()
+    {
+        try
+        {
+            var userId = User.GetUserId();
+            if (!userId.HasValue)
+                return Unauthorized();
+
+            var fp = await _fpService.GetFpByCurrentUserIdAsync(userId.Value);
+            return Ok(fp);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // Search ForumProfiles by DisplayName keyword
     [HttpGet("searchForumProfiles")]
-    public async Task<ActionResult<IEnumerable<ForumProfileResponseDto>>> SearchFpByKeyword([FromQuery] string keyword)
+    public async Task<ActionResult<IEnumerable<ForumProfileResponseDto>>> SearchPublicFpByKeyword([FromQuery] string keyword)
     {
-        return Ok(await _fpService.SearchFpByKeywordAsync(keyword));
+        return Ok(await _fpService.SearchPublicFpByKeywordAsync(keyword));
     }
 
     // UPDATE
     //##############################################################################
-    // Update ForumProfile by UserId
-    [HttpPatch("user/{userId:int}")]
-    public async Task<ActionResult<ForumProfileResponseDto>> UpdateFpByUserId(int userId, [FromBody] ForumProfileUpdatedDto dto)
+    // Update ForumProfile
+    [Authorize]
+    [HttpPatch("forumProfile/me")]
+    public async Task<ActionResult<ForumProfileResponseDto>> UpdateFpByUserId([FromBody] ForumProfileUpdatedDto dto)
     {
-        var fp = await _fpService.UpdateFpAsync(userId, dto);
+        try
+        {
+            var userId = User.GetUserId();
+            if (!userId.HasValue)
+                return Unauthorized();
 
-        if(fp == null)
-            return NotFound();
-        
-        return Ok(fp);
+            var fp = await _fpService.UpdateFpAsync(userId.Value, dto);
+            return Ok(fp);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
     }
 }

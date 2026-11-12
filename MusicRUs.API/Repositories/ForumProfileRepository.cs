@@ -19,6 +19,6 @@ public class ForumProfileRepository : Repository<ForumProfile>, IForumProfileRep
             .Include(fp => fp.Genres)
             .FirstOrDefaultAsync(fp => fp.UserId == userId);
     
-    public async Task<IEnumerable<ForumProfile>> SearchFpByKeywordAsync(string keyword)
-        => await SearchAsync(fp => EF.Functions.ILike(fp.DisplayName, $"%{keyword}%"));
+    public async Task<IEnumerable<ForumProfile>> SearchPublicFpByKeywordAsync(string keyword)
+        => await SearchAsync(fp => EF.Functions.ILike(fp.DisplayName!, $"%{keyword}%") && fp.IsPublic == true);
 }
