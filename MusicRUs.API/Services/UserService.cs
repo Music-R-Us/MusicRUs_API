@@ -16,12 +16,14 @@ public class UserService : IUserService
     private readonly IEncryptionService _encryptionService;
     private const int MaxFailedLoginAttempts = 3;
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+    private readonly ITwoFactorService _twoFactorService;
 
-     public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IEncryptionService encryptionService)
+     public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IEncryptionService encryptionService, ITwoFactorService twoFactorService)
     {
         _userRepo = userRepository;
         _passwordHasher = passwordHasher;
         _encryptionService = encryptionService;
+        _twoFactorService = twoFactorService;
     }
 
     // Implement the methods defined in IUserService interface
@@ -99,6 +101,31 @@ public class UserService : IUserService
 
     public async Task<LoginResult> GetUserByEmailAndPasswordAsync(string email, string password) // READ
         => await LoginWithPasswordAsync(await _userRepo.GetUserByEmailAsync(HashEmail(email)), password);
+
+    public async Task<LoginResult> VerifyTwoFactorLoginAsync(int userId, string code) // READ
+    {
+        var user = await _userRepo.GetByIdAsync(userId);
+        if (user is null || !user.TwoFactorEnabled)
+            return new LoginResult(LoginStatus.InvalidCredentials);
+
+        if (user.LockedUntil > DateTime.UtcNow)
+            return new LoginResult(LoginStatus.AccountLocked, LockedUntil: user.LockedUntil);
+
+        // Wrong 2fa codes counts the same lockout as wrong passwords
+        if (!_twoFactorService.VerifyAndConsumeCode(user, code))
+        {
+            await RegisterFailedLoginAsync(user);
+            return user.LockedUntil > DateTime.UtcNow
+                ? new LoginResult(LoginStatus.AccountLocked, LockedUntil: user.LockedUntil)
+                : new LoginResult(LoginStatus.InvalidCredentials);
+        }
+
+        user.FailedLoginAttempts = 0;
+        user.LockedUntil = null;
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync();
+        return new LoginResult(LoginStatus.Success, MapToDto(user));
+    }
 
     public async Task<IEnumerable<UserResponseDto>> SearchUsersByKeywordAsync(string keyword) // READ
     {
@@ -214,6 +241,10 @@ public class UserService : IUserService
                 ? new LoginResult(LoginStatus.AccountLocked, LockedUntil: user.LockedUntil)
                 : new LoginResult(LoginStatus.InvalidCredentials);
         }
+
+        if (user.TwoFactorEnabled)
+            return new LoginResult(LoginStatus.TwoFactorRequired, MapToDto(user));
+
 
         await ResetFailedLoginsAsync(user);
         return new LoginResult(LoginStatus.Success, MapToDto(user));

@@ -85,6 +85,10 @@ public class UserController : ControllerBase
         if (result.Status == LoginStatus.AccountLocked)
             return StatusCode(StatusCodes.Status423Locked,
                 new { message = "Account temporarily locked due to too many failed attempts.", lockedUntil = result.LockedUntil });
+        
+        if (result.Status == LoginStatus.TwoFactorRequired)
+            return Accepted(_tokenService.CreateTwoFactorChallenge(result.User!.Id));
+
         if (result.Status != LoginStatus.Success)
             return Unauthorized("Invalid username or password.");
 
@@ -100,6 +104,10 @@ public class UserController : ControllerBase
         if (result.Status == LoginStatus.AccountLocked)
             return StatusCode(StatusCodes.Status423Locked,
                 new { message = "Account temporarily locked due to too many failed attempts.", lockedUntil = result.LockedUntil });
+
+        if (result.Status == LoginStatus.TwoFactorRequired)
+            return Accepted(_tokenService.CreateTwoFactorChallenge(result.User!.Id));
+           
         if (result.Status != LoginStatus.Success)
             return Unauthorized("Invalid email or password.");
 

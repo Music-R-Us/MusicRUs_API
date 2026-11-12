@@ -14,10 +14,14 @@ namespace MusicRUs.API.Controllers;
 public class TwoFactorController : ControllerBase
 {
     private readonly ITwoFactorService _twoFactorService;
+    private readonly ITokenService _tokenService;
+    private readonly IUserService _userService;
 
-    public TwoFactorController(ITwoFactorService twoFactorService)
+    public TwoFactorController(ITwoFactorService twoFactorService, ITokenService tokenService, IUserService userService)
     {
         _twoFactorService = twoFactorService;
+        _tokenService = tokenService;
+        _userService = userService;
     }
 
     // Create a new secret and return the QR code for the authenticator app
@@ -54,6 +58,26 @@ public class TwoFactorController : ControllerBase
 
         var error = await _twoFactorService.DisableAsync(userId.Value, dto.Code);
         return error == TwoFactorError.None ? NoContent() : MapError(error);
+    }
+
+    // Second step of login. Anonymous, because the user has no access token yet
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    [HttpPost("verify")]
+    public async Task<ActionResult<AuthResponseDto>> Verify([FromBody] TwoFactorLoginDto dto)
+    {
+        var userId = await _tokenService.ValidateTwoFactorTokenAsync(dto.TwoFactorToken);
+        if (userId is null)
+            return Unauthorized("The 2FA session has expired. Log in again.");
+
+        var result = await _userService.VerifyTwoFactorLoginAsync(userId.Value, dto.Code);
+        if (result.Status == LoginStatus.AccountLocked)
+            return StatusCode(StatusCodes.Status423Locked,
+                new { message = "Account temporarily locked due to too many failed attempts.", lockedUntil = result.LockedUntil });
+        if (result.Status != LoginStatus.Success)
+            return Unauthorized("Invalid code.");
+
+        return Ok(_tokenService.CreateAuthResponse(result.User!));
     }
 
     // Translates a 2FA error to the right HTTP status code (shared by all three endpoints)
