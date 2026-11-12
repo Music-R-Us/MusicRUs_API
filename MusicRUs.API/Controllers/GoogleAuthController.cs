@@ -37,6 +37,10 @@ public class GoogleAuthController : ControllerBase
             return Conflict(new { message = "An account with this e-mail already exists. Log in with your password." });
 
         var user = result.User!;
+       
+       // Users with 2FA must also enter a code from their authenticator app
+        if (user.TwoFactorEnabled)
+            return Accepted(_tokenService.CreateTwoFactorChallenge(user.Id));
         
         await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
 

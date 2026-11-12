@@ -14,12 +14,16 @@ public class UserService : IUserService
 
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEncryptionService _encryptionService;
+    private const int MaxFailedLoginAttempts = 3;
+    private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+    private readonly ITwoFactorService _twoFactorService;
 
-     public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IEncryptionService encryptionService)
+     public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IEncryptionService encryptionService, ITwoFactorService twoFactorService)
     {
         _userRepo = userRepository;
         _passwordHasher = passwordHasher;
         _encryptionService = encryptionService;
+        _twoFactorService = twoFactorService;
     }
 
     // Implement the methods defined in IUserService interface
@@ -41,7 +45,7 @@ public class UserService : IUserService
         };
         await _userRepo.AddAsync(user);
         await _userRepo.SaveChangesAsync();
-        return MapToDto(user);
+        return MapCurrentToDto(user);
     }
 
     public async Task<UpdateUserResult> GoogleLoginAsync(GoogleUserInfo googleUser)
@@ -50,7 +54,7 @@ public class UserService : IUserService
         var user = await _userRepo.GetByGoogleIdAsync(googleUser.GoogleId);
         if (user is not null)
         {
-            return UpdateUserResult.Ok(MapToDto(user));
+            return UpdateUserResult.Ok(MapCurrentToDto(user));
         }
 
         // Never link automatically by e-mail: anyone can sign up with someone else's e-mail
@@ -81,7 +85,7 @@ public class UserService : IUserService
         };
         await _userRepo.AddAsync(user);
         await _userRepo.SaveChangesAsync();
-        return UpdateUserResult.Ok(MapToDto(user));
+        return UpdateUserResult.Ok(MapCurrentToDto(user));
     }
 
     public async Task<UserResponseDto?> GetUserByIdAsync(int id) // READ
@@ -102,22 +106,35 @@ public class UserService : IUserService
         return MapCurrentToDto(user);
     }
 
-    public async Task<UserResponseDto?> GetUserByUsernameAndPasswordAsync(string username, string password) // READ
-    {
-        var user = await _userRepo.GetUserByUsernameAsync(username);
-        if (user?.PasswordHash is null || !_passwordHasher.Verify(password, HashedPassword.FromStoredHash(user.PasswordHash)))
-            throw new InvalidOperationException("Invalid username or password");
-        
-        return MapToDto(user);
-    }
+    public async Task<LoginResult> GetUserByUsernameAndPasswordAsync(string username, string password) // READ
+        => await LoginWithPasswordAsync(await _userRepo.GetUserByUsernameAsync(username), password);
 
-    public async Task<UserResponseDto?> GetUserByEmailAndPasswordAsync(string email, string password) // READ
+    public async Task<LoginResult> GetUserByEmailAndPasswordAsync(string email, string password) // READ
+        => await LoginWithPasswordAsync(await _userRepo.GetUserByEmailAsync(HashEmail(email)), password);
+
+    public async Task<LoginResult> VerifyTwoFactorLoginAsync(int userId, string code) // READ
     {
-        var user = await _userRepo.GetUserByEmailAsync(HashEmail(email));
-        if (user?.PasswordHash is null || !_passwordHasher.Verify(password, HashedPassword.FromStoredHash(user.PasswordHash)))
-            throw new InvalidOperationException("Invalid email or password"); 
-        
-        return MapToDto(user);
+        var user = await _userRepo.GetByIdAsync(userId);
+        if (user is null || !user.TwoFactorEnabled)
+            return new LoginResult(LoginStatus.InvalidCredentials);
+
+        if (user.LockedUntil > DateTime.UtcNow)
+            return new LoginResult(LoginStatus.AccountLocked, LockedUntil: user.LockedUntil);
+
+        // Wrong 2fa codes counts the same lockout as wrong passwords
+        if (!_twoFactorService.VerifyAndConsumeCode(user, code))
+        {
+            await RegisterFailedLoginAsync(user);
+            return user.LockedUntil > DateTime.UtcNow
+                ? new LoginResult(LoginStatus.AccountLocked, LockedUntil: user.LockedUntil)
+                : new LoginResult(LoginStatus.InvalidCredentials);
+        }
+
+        user.FailedLoginAttempts = 0;
+        user.LockedUntil = null;
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync();
+        return new LoginResult(LoginStatus.Success, MapCurrentToDto(user));
     }
 
     public async Task<IEnumerable<UserResponseDto>> SearchUsersByKeywordAsync(string keyword) // READ
@@ -136,7 +153,7 @@ public class UserService : IUserService
         user.UpdatedAt = DateTime.UtcNow;
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync();
-        return MapToDto(user);
+        return MapCurrentToDto(user);
     }
 
     public async Task<UpdateUserResult> UpdateEmailAsync(int id, UpdateEmailDto dto) // UPDATE
@@ -163,7 +180,7 @@ public class UserService : IUserService
         user.UpdatedAt = DateTime.UtcNow;
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync();
-        return UpdateUserResult.Ok(MapToDto(user));
+        return UpdateUserResult.Ok(MapCurrentToDto(user));
     }
 
     public async Task<UpdateUserResult> UpdatePasswordAsync(int id, UpdatePasswordDto dto) // UPDATE
@@ -180,7 +197,7 @@ public class UserService : IUserService
         user.UpdatedAt = DateTime.UtcNow;
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync();
-        return UpdateUserResult.Ok(MapToDto(user));
+        return UpdateUserResult.Ok(MapCurrentToDto(user));
     }
 
     public async Task<bool> DeleteUserAsync(int id) // DELETE
@@ -220,9 +237,62 @@ public class UserService : IUserService
             Username = user.Username,
             Email = _encryptionService.Decrypt(user.Email),
             CreatedAt = user.CreatedAt,
-            UpdatedAt = user.UpdatedAt
+            UpdatedAt = user.UpdatedAt,
+            TwoFactorEnabled = user.TwoFactorEnabled
         };
     }
 
     private string HashEmail(string email) => _encryptionService.Hash(email.Trim().ToLowerInvariant()); // Helper method to hash emails consistently
+
+        // Shared login logic for username and e-mail login
+    private async Task<LoginResult> LoginWithPasswordAsync(User? user, string password)
+    {
+        if (user?.PasswordHash is null)
+            return new LoginResult(LoginStatus.InvalidCredentials);
+
+        // Check the lock before the password: a locked account costs no Argon2 and cannot be guessed further
+        if (user.LockedUntil > DateTime.UtcNow)
+            return new LoginResult(LoginStatus.AccountLocked, LockedUntil: user.LockedUntil);
+
+        if (!_passwordHasher.Verify(password, HashedPassword.FromStoredHash(user.PasswordHash)))
+        {
+            await RegisterFailedLoginAsync(user);
+            return user.LockedUntil > DateTime.UtcNow
+                ? new LoginResult(LoginStatus.AccountLocked, LockedUntil: user.LockedUntil)
+                : new LoginResult(LoginStatus.InvalidCredentials);
+        }
+        
+        // Does NOT reset the failed attempts here because an attacker who knows the password could
+        // alternate between the correct password and wrong 2fa codes and never be locked out
+        if (user.TwoFactorEnabled)
+            return new LoginResult(LoginStatus.TwoFactorRequired, MapCurrentToDto(user));
+
+
+        await ResetFailedLoginsAsync(user);
+        return new LoginResult(LoginStatus.Success, MapCurrentToDto(user));
+    }
+
+    private async Task RegisterFailedLoginAsync(User user)
+    {
+        user.FailedLoginAttempts++;
+        if (user.FailedLoginAttempts >= MaxFailedLoginAttempts)
+        {
+            user.LockedUntil = DateTime.UtcNow.Add(LockoutDuration);
+            user.FailedLoginAttempts = 0;
+            // TODO: send an e-mail to the user when the mail service is ready
+        }
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync();
+    }
+
+    private async Task ResetFailedLoginsAsync(User user)
+    {
+        if (user.FailedLoginAttempts == 0 && user.LockedUntil is null)
+            return; // Nothing to reset, so skip the database write
+
+        user.FailedLoginAttempts = 0;
+        user.LockedUntil = null;
+        _userRepo.Update(user);
+        await _userRepo.SaveChangesAsync();
+}
 }

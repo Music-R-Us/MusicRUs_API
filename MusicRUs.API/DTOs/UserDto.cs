@@ -27,6 +27,7 @@ public class UserResponseDto // DTO for returning user information in API respon
     public string Email { get; set; } = null!;
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public bool TwoFactorEnabled { get; set; }
 }
 
 public class UserIncludeDto
