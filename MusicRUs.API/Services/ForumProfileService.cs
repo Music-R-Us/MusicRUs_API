@@ -29,7 +29,7 @@ public class ForumProfileService : IForumProfileService
     {
         var existingProfile = await _fpRepo.GetFpByUserIdAsync(dto.UserId);
         if (existingProfile != null)
-            return null;
+            throw new InvalidOperationException("A forum profile for this user already exists.");
         
         var fp = new ForumProfile
         {
@@ -45,15 +45,27 @@ public class ForumProfileService : IForumProfileService
     {
         var fp = await _fpRepo.GetWithFavoritesAsync(userId);
         if (fp == null)
-            return null;
+            throw new KeyNotFoundException("Forum profile not found.");
+
+        if (fp!.IsPublic == false)
+            throw new UnauthorizedAccessException("Forum profile is not public.");
+        
+        return MapToDto(fp);
+    }
+
+    public async Task<ForumProfileResponseDto?> GetFpByCurrentUserIdAsync(int userId) // READ
+    {
+        var fp = await _fpRepo.GetWithFavoritesAsync(userId);
+        if (fp == null)
+            throw new KeyNotFoundException("Forum profile not found.");
         
         return MapToDto(fp);
     }
 
     // Search profiles by displayname keyword
-    public async Task<IEnumerable<ForumProfileResponseDto>> SearchFpByKeywordAsync(string keyword) // READ
+    public async Task<IEnumerable<ForumProfileResponseDto>> SearchPublicFpByKeywordAsync(string keyword) // READ
     {
-        var fp = await _fpRepo.SearchFpByKeywordAsync(keyword);
+        var fp = await _fpRepo.SearchPublicFpByKeywordAsync(keyword);
         return fp.Select(MapToDto);
     }
 
@@ -61,7 +73,7 @@ public class ForumProfileService : IForumProfileService
     {
         var fp = await _fpRepo.GetWithFavoritesAsync(userId);
         if(fp == null)
-            return null;
+            throw new KeyNotFoundException("Forum profile not found.");
         
         fp.DisplayName = dto.DisplayName ?? fp.DisplayName; // Update fields if provided, else keep existing values
         fp.Bio = dto.Bio ?? fp.Bio;
