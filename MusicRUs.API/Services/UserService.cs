@@ -116,6 +116,7 @@ public class UserService : IUserService
         var user = await _userRepo.GetUserByEmailAsync(HashEmail(email));
         if (user?.PasswordHash is null || !_passwordHasher.Verify(password, HashedPassword.FromStoredHash(user.PasswordHash)))
             throw new InvalidOperationException("Invalid email or password"); 
+        
         return MapToDto(user);
     }
 

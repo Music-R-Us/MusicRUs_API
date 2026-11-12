@@ -38,11 +38,7 @@ public class UserController : ControllerBase
         try
         {
             var user = await _userService.CreateUserAsync(dto);
-            if (user is null)
-            {
-                return Conflict("User with the same email or username already exists.");
-            }
-            var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
+            var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user!.Id});
             return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, _tokenService.CreateAuthResponse(user));
         }
         catch (InvalidOperationException ex)
@@ -57,12 +53,19 @@ public class UserController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<UserResponseDto?>> GetUserById(int id)
     {
-        var user = await _userService.GetUserByIdAsync(id);
-        if (user is null)
+        try
         {
-            return NotFound();
+            var user = await _userService.GetUserByIdAsync(id);
+            if (user is null)
+            {
+                return NotFound();
+            }
+            return Ok(user);
         }
-        return Ok(user);
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     [Authorize]
@@ -70,17 +73,20 @@ public class UserController : ControllerBase
     // Get Current User by JWT token
     public async Task<ActionResult<UserResponseDto?>> GetCurrentUser()
     {
-        var userId = User.GetUserId();
-        if (userId is null)
+        try
         {
-            return Unauthorized();
+            var userId = User.GetUserId();
+            if (userId is null)
+            {
+                return Unauthorized();
+            }
+            var user = await _userService.GetCurrentUserByIdAsync(userId.Value);
+            return Ok(user);
         }
-        var user = await _userService.GetCurrentUserByIdAsync(userId.Value);
-        if (user is null)
+        catch (KeyNotFoundException ex)
         {
-            return NotFound();
+            return NotFound(ex.Message);
         }
-        return Ok(user);
     }
 
     // Get User by username and password
@@ -88,12 +94,15 @@ public class UserController : ControllerBase
     [HttpPost("login/username")]
     public async Task<ActionResult<AuthResponseDto>> GetUserByUsernameAndPassword([FromBody] UsernameLoginDto dto)
     {
-        var user = await _userService.GetUserByUsernameAndPasswordAsync(dto.Username, dto.Password);
-        if (user is null)
+        try
         {
-            return Unauthorized("Invalid username or password.");
+            var user = await _userService.GetUserByUsernameAndPasswordAsync(dto.Username, dto.Password);
+            return Ok(_tokenService.CreateAuthResponse(user!));
         }
-        return Ok(_tokenService.CreateAuthResponse(user));
+        catch (InvalidOperationException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
     }
 
     // Get User by email and password
@@ -101,12 +110,15 @@ public class UserController : ControllerBase
     [HttpPost("login/email")]
     public async Task<ActionResult<AuthResponseDto>> GetUserByEmailAndPassword([FromBody] EmailLoginDto dto)
     {
-        var user = await _userService.GetUserByEmailAndPasswordAsync(dto.Email, dto.Password);
-        if (user is null)
+        try
         {
-            return Unauthorized("Invalid email or password.");
+            var user = await _userService.GetUserByEmailAndPasswordAsync(dto.Email, dto.Password);
+            return Ok(_tokenService.CreateAuthResponse(user!));
         }
-        return Ok(_tokenService.CreateAuthResponse(user));
+        catch (InvalidOperationException ex)
+        {
+            return Unauthorized(ex.Message);
+        }
     }
 
     // Logout: revoke the current token until it would have expired
@@ -157,10 +169,14 @@ public class UserController : ControllerBase
     // Update email
     [Authorize]
     [EnableRateLimiting("auth")]
-    [HttpPatch("updateEmail/{id:int}")]
-    public async Task<ActionResult<UserResponseDto?>> UpdateEmail(int id, [FromBody] UpdateEmailDto dto)
+    [HttpPatch("updateEmail/me")]
+    public async Task<ActionResult<UserResponseDto?>> UpdateEmail([FromBody] UpdateEmailDto dto)
     {
-        var result = await _userService.UpdateEmailAsync(id, dto);
+        var userId = User.GetUserId();
+        if (userId is null)
+            return Unauthorized();
+
+        var result = await _userService.UpdateEmailAsync(userId.Value, dto);
         switch (result.Error)
         {
             case UpdateUserError.NotFound:
@@ -177,10 +193,14 @@ public class UserController : ControllerBase
     // Update password
     [Authorize]
     [EnableRateLimiting("auth")]
-    [HttpPatch("updatePassword/{id:int}")]
-    public async Task<ActionResult<UserResponseDto?>> UpdatePassword(int id, [FromBody] UpdatePasswordDto dto)
+    [HttpPatch("updatePassword/me")]
+    public async Task<ActionResult<UserResponseDto?>> UpdatePassword([FromBody] UpdatePasswordDto dto)
     {
-        var result = await _userService.UpdatePasswordAsync(id, dto);
+        var userId = User.GetUserId();
+        if (userId is null)
+            return Unauthorized();
+
+        var result = await _userService.UpdatePasswordAsync(userId.Value, dto);
         switch (result.Error)
         {
             case UpdateUserError.NotFound:
@@ -196,14 +216,28 @@ public class UserController : ControllerBase
     //##############################################################################
     // Delete User by ID
     [Authorize]
-    [HttpDelete("{id:int}")]
-    public async Task<ActionResult> DeleteUserById(int id)
+    [HttpDelete("deleteUser/me")]
+    public async Task<ActionResult> DeleteUserById()
     {
-        var success = await _userService.DeleteUserAsync(id);
-        if (!success)
+        try
         {
-            return NotFound();
+            var userId = User.GetUserId();
+            if (userId is null)
+                return Unauthorized();
+
+            var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
+            var exp = User.FindFirstValue(JwtRegisteredClaimNames.Exp);
+            if (jti is null || !long.TryParse(exp, out var expSeconds))
+                return Unauthorized();
+
+            _tokenDenylist.Revoke(jti, DateTimeOffset.FromUnixTimeSeconds(expSeconds));
+
+            var success = await _userService.DeleteUserAsync(userId.Value);
+            return NoContent();
         }
-        return NoContent();
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 }
