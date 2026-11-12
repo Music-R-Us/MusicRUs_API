@@ -60,7 +60,7 @@ public class ForumProfileController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("forumProfile/me")]
+    [HttpGet("me")]
     public async Task<ActionResult<ForumProfileResponseDto>> GetFpByCurrentUser()
     {
         try
@@ -89,7 +89,7 @@ public class ForumProfileController : ControllerBase
     //##############################################################################
     // Update ForumProfile
     [Authorize]
-    [HttpPatch("forumProfile/me")]
+    [HttpPatch("me")]
     public async Task<ActionResult<ForumProfileResponseDto>> UpdateFpByUserId([FromBody] ForumProfileUpdatedDto dto)
     {
         try
