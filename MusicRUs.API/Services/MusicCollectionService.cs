@@ -16,14 +16,14 @@ public class MusicCollectionService : IMusicCollectionService
 
     // Implement the methods defined in IMusicCollectionService here
 
-    public async Task<MusicCollectionResponseDto?> AddToOwnedCollectionAsync(CreateOwnedMusicCollectionDto dto) // CREATE (Owned collection)
+    public async Task<MusicCollectionResponseDto?> AddToOwnedCollectionAsync(int userId, CreateOwnedMusicCollectionDto dto) // CREATE (Owned collection)
     {
-        if (await _mcRepo.EntryExistAsync(dto.UserId, dto.AlbumId, dto.Format, CollectionStatus.Owned))
-            return null!; // Entry already exists in the collection
+        if (await _mcRepo.EntryExistAsync(userId, dto.AlbumId, dto.Format, CollectionStatus.Owned))
+            throw new InvalidOperationException();
 
         var item = new MusicCollection
         {
-            UserId = dto.UserId,
+            UserId = userId,
             AlbumId = dto.AlbumId,
             Format = dto.Format,
             Condition = dto.Condition,
@@ -33,18 +33,18 @@ public class MusicCollectionService : IMusicCollectionService
         await _mcRepo.AddAsync(item);
         await _mcRepo.SaveChangesAsync();
 
-        var saved = await _mcRepo.GetCollectionItemAsync(dto.UserId, item.Id);
+        var saved = await _mcRepo.GetCollectionItemAsync(userId, item.Id);
         return MapToDto(saved!);
     }
 
-    public async Task<MusicCollectionResponseDto?> AddToWantedCollectionAsync(CreateWantedMusicCollectionDto dto) // CREATE (Wanted collection)
+    public async Task<MusicCollectionResponseDto?> AddToWantedCollectionAsync(int userId, CreateWantedMusicCollectionDto dto) // CREATE (Wanted collection)
     {
-        if (await _mcRepo.EntryExistAsync(dto.UserId, dto.AlbumId, dto.Format, CollectionStatus.Wanted))
-            return null!; // Entry already exists in the collection
+        if (await _mcRepo.EntryExistAsync(userId, dto.AlbumId, dto.Format, CollectionStatus.Wanted))
+            throw new InvalidOperationException();
 
         var item = new MusicCollection
         {
-            UserId = dto.UserId,
+            UserId = userId,
             AlbumId = dto.AlbumId,
             Format = dto.Format,
             Condition = dto.Condition,
@@ -54,7 +54,7 @@ public class MusicCollectionService : IMusicCollectionService
         await _mcRepo.AddAsync(item);
         await _mcRepo.SaveChangesAsync();
 
-        var saved = await _mcRepo.GetCollectionItemAsync(dto.UserId, item.Id);
+        var saved = await _mcRepo.GetCollectionItemAsync(userId, item.Id);
         return MapToDto(saved!);
     }
 
@@ -73,14 +73,17 @@ public class MusicCollectionService : IMusicCollectionService
     public async Task<MusicCollectionResponseDto?> GetCollectionItemAsync(int userId, int collectionId) // READ
     {
         var item = await _mcRepo.GetCollectionItemAsync(userId, collectionId);
-        return item == null ? null! : MapToDto(item);
+        if(item == null)
+            throw new KeyNotFoundException("Collection item not found");
+
+        return MapToDto(item);
     }
 
     public async Task<MusicCollectionResponseDto?> UpdateCollectionItemAsync(int userId, int collectionId, UpdateMusicCollectionDto dto) // UPDATE
     {
         var item = await _mcRepo.GetCollectionItemAsync(userId, collectionId);
         if(item == null)
-            return null!;
+            throw new KeyNotFoundException("Collection item not found");
 
         item.Format = dto.Format ?? item.Format; // Update fields if provided, else keep existing
         item.Condition = dto.Condition ?? item.Condition;
@@ -96,7 +99,7 @@ public class MusicCollectionService : IMusicCollectionService
     {
         var item = await _mcRepo.GetCollectionItemAsync(userId, collectionId);
         if(item == null)
-            return false;
+            throw new KeyNotFoundException("Collection item not found");
 
         _mcRepo.Delete(item);
         await _mcRepo.SaveChangesAsync();

@@ -8,8 +8,8 @@ namespace MusicRUs.API.DTOs;
 
 public class CreateOwnedMusicCollectionDto // DTO for adding an album to a user's collection
 {
-    [Required]
-    public int UserId { get; set; }
+    //[Required]
+    //public int UserId { get; set; }
 
     [Required]
     public int AlbumId { get; set; }
@@ -27,8 +27,8 @@ public class CreateOwnedMusicCollectionDto // DTO for adding an album to a user'
 
 public class CreateWantedMusicCollectionDto // DTO for adding an album to a user's wanted collection
 {
-    [Required]
-    public int UserId { get; set; }
+    //[Required]
+    //public int UserId { get; set; }
 
     [Required]
     public int AlbumId { get; set; }

@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicRUs.API.DTOs;
 using MusicRUs.API.Services.Interfaces;
+using MusicRUs.API.Backend.Logic.Jwt;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MusicRUs.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class MusicCollectionController : ControllerBase
 {
@@ -26,26 +29,40 @@ public class MusicCollectionController : ControllerBase
     [HttpPost("owned")]
     public async Task<ActionResult<MusicCollectionResponseDto>> AddToOwnedCollection([FromBody] CreateOwnedMusicCollectionDto dto)
     {
-        var item = await _mcService.AddToOwnedCollectionAsync(dto);
-        if(item == null)
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+            
+            var item = await _mcService.AddToOwnedCollectionAsync(userId.Value, dto);
+            return Ok(item);
+        }
+        catch (InvalidOperationException)
         {
             var album = await _albumService.GetAlbumByIdAsync(dto.AlbumId);
             return Conflict($"{album?.Title} ({dto.Format}) already exists in your collection");
         }
-        return Ok(item);
     }
 
     // Add Wanted Collection Item
     [HttpPost("wanted")]
     public async Task<ActionResult<MusicCollectionResponseDto>> AddToWantedCollection([FromBody] CreateWantedMusicCollectionDto dto)
     {
-        var item = await _mcService.AddToWantedCollectionAsync(dto);
-        if(item == null)
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            var item = await _mcService.AddToWantedCollectionAsync(userId.Value, dto);
+            return Ok(item);
+        }
+        catch (InvalidOperationException)
         {
             var album = await _albumService.GetAlbumByIdAsync(dto.AlbumId);
             return Conflict($"{album?.Title} ({dto.Format}) already exists in your wanted-list");
         }
-        return Ok(item);
     }
 
     // READ
@@ -67,24 +84,42 @@ public class MusicCollectionController : ControllerBase
     }
 
     // Get Collection Item by Id
-    [HttpGet("{userId:int}/{collectionId:int}")]
-    public async Task<ActionResult<MusicCollectionResponseDto>> GetCollectionItem(int userId, int collectionId)
+    [HttpGet("{collectionId:int}")]
+    public async Task<ActionResult<MusicCollectionResponseDto>> GetCollectionItem(int collectionId)
     {
-        var item = await _mcService.GetCollectionItemAsync(userId, collectionId);
-        if(item == null)
-            return NotFound();
-        return Ok(item);
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            var item = await _mcService.GetCollectionItemAsync(userId.Value, collectionId);
+            return Ok(item);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // DELETE
     //##############################################################################
     // Delete Collection Item by Id
-    [HttpDelete("{userId:int}/{collectionId:int}")]
-    public async Task<ActionResult> DeleteCollectionItem(int userId, int collectionId)
+    [HttpDelete("{collectionId:int}")]
+    public async Task<ActionResult> DeleteCollectionItem(int collectionId)
     {
-        var success = await _mcService.DeleteCollectionItemAsync(userId, collectionId);
-        if(!success)
-            return NotFound();
-        return NoContent();
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            var success = await _mcService.DeleteCollectionItemAsync(userId.Value, collectionId);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 }
