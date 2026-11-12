@@ -35,13 +35,16 @@ public class UserController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<AuthResponseDto>> CreateUser([FromBody] CreateUserDto dto)
     {
-        var user = await _userService.CreateUserAsync(dto);
-        if (user is null)
+        try
         {
-            return Conflict("User with the same email or username already exists.");
+            var user = await _userService.CreateUserAsync(dto);
+            var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user!.Id});
+            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, _tokenService.CreateAuthResponse(user));
         }
-        var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
-        return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, _tokenService.CreateAuthResponse(user));
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
     }
 
     // READ
@@ -50,12 +53,19 @@ public class UserController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<UserResponseDto?>> GetUserById(int id)
     {
-        var user = await _userService.GetUserByIdAsync(id);
-        if (user is null)
+        try
         {
-            return NotFound();
+            var user = await _userService.GetUserByIdAsync(id);
+            if (user is null)
+            {
+                return NotFound();
+            }
+            return Ok(user);
         }
-        return Ok(user);
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     [Authorize]
@@ -63,17 +73,20 @@ public class UserController : ControllerBase
     // Get Current User by JWT token
     public async Task<ActionResult<UserResponseDto?>> GetCurrentUser()
     {
-        var userId = User.GetUserId();
-        if (userId is null)
+        try
         {
-            return Unauthorized();
+            var userId = User.GetUserId();
+            if (userId is null)
+            {
+                return Unauthorized();
+            }
+            var user = await _userService.GetCurrentUserByIdAsync(userId.Value);
+            return Ok(user);
         }
-        var user = await _userService.GetUserByIdAsync(userId.Value);
-        if (user is null)
+        catch (KeyNotFoundException ex)
         {
-            return NotFound();
+            return NotFound(ex.Message);
         }
-        return Ok(user);
     }
 
     // Get User by username and password
@@ -140,23 +153,36 @@ public class UserController : ControllerBase
     // UPDATE
     //##############################################################################
     // Update Username
-    [HttpPatch("updateUsername/{id:int}")]
-    public async Task<ActionResult<UserResponseDto?>> UpdateUsername(int id, [FromBody] UpdateUsernameDto dto)
+    [Authorize]
+    [HttpPatch("updateUsername/me")]
+    public async Task<ActionResult<UserResponseDto?>> UpdateUsername([FromBody] UpdateUsernameDto dto)
     {
-        var user = await _userService.UpdateUsernameAsync(id, dto);
-        if (user is null)
+        try
         {
-            return NotFound();
+            var userId = User.GetUserId();
+            if (userId is null)
+                return Unauthorized();
+
+            var user = await _userService.UpdateUsernameAsync(userId.Value, dto);
+            return Ok(user);
         }
-        return Ok(user);
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // Update email
+    [Authorize]
     [EnableRateLimiting("auth")]
-    [HttpPatch("updateEmail/{id:int}")]
-    public async Task<ActionResult<UserResponseDto?>> UpdateEmail(int id, [FromBody] UpdateEmailDto dto)
+    [HttpPatch("updateEmail/me")]
+    public async Task<ActionResult<UserResponseDto?>> UpdateEmail([FromBody] UpdateEmailDto dto)
     {
-        var result = await _userService.UpdateEmailAsync(id, dto);
+        var userId = User.GetUserId();
+        if (userId is null)
+            return Unauthorized();
+
+        var result = await _userService.UpdateEmailAsync(userId.Value, dto);
         switch (result.Error)
         {
             case UpdateUserError.NotFound:
@@ -171,11 +197,16 @@ public class UserController : ControllerBase
     }
 
     // Update password
+    [Authorize]
     [EnableRateLimiting("auth")]
-    [HttpPatch("updatePassword/{id:int}")]
-    public async Task<ActionResult<UserResponseDto?>> UpdatePassword(int id, [FromBody] UpdatePasswordDto dto)
+    [HttpPatch("updatePassword/me")]
+    public async Task<ActionResult<UserResponseDto?>> UpdatePassword([FromBody] UpdatePasswordDto dto)
     {
-        var result = await _userService.UpdatePasswordAsync(id, dto);
+        var userId = User.GetUserId();
+        if (userId is null)
+            return Unauthorized();
+
+        var result = await _userService.UpdatePasswordAsync(userId.Value, dto);
         switch (result.Error)
         {
             case UpdateUserError.NotFound:
@@ -190,14 +221,29 @@ public class UserController : ControllerBase
     // DELETE
     //##############################################################################
     // Delete User by ID
-    [HttpDelete("{id:int}")]
-    public async Task<ActionResult> DeleteUserById(int id)
+    [Authorize]
+    [HttpDelete("deleteUser/me")]
+    public async Task<ActionResult> DeleteUserById()
     {
-        var success = await _userService.DeleteUserAsync(id);
-        if (!success)
+        try
         {
-            return NotFound();
+            var userId = User.GetUserId();
+            if (userId is null)
+                return Unauthorized();
+
+            var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti);
+            var exp = User.FindFirstValue(JwtRegisteredClaimNames.Exp);
+            if (jti is null || !long.TryParse(exp, out var expSeconds))
+                return Unauthorized();
+
+            _tokenDenylist.Revoke(jti, DateTimeOffset.FromUnixTimeSeconds(expSeconds));
+
+            var success = await _userService.DeleteUserAsync(userId.Value);
+            return NoContent();
         }
-        return NoContent();
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 }

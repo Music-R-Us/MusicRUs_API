@@ -12,7 +12,6 @@ public class ArtistSubscription : IHasTimestamps
     public int ArtistId { get; set; } // Foreign key
     public Artist Artist { get; set; } = null!;
 
-    // Tom betyder "alle" (UC-012)
     public string? CountryCode { get; set; } // Empty means "all" (UC-012)
     public string? Region { get; set; }
     public string? City { get; set; }

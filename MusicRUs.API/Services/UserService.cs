@@ -31,9 +31,7 @@ public class UserService : IUserService
     {
         var emailHash = HashEmail(dto.Email);
         if (await _userRepo.EmailExistsAsync(emailHash) || await _userRepo.UsernameExistsAsync(dto.Username))
-        {
-            return null; // User with the same email or username already exists
-        }
+            throw new InvalidOperationException("User with the same email or username already exists");
 
         // Create new User entity
         var user = new User // Map properties from dto to entity
@@ -47,7 +45,7 @@ public class UserService : IUserService
         };
         await _userRepo.AddAsync(user);
         await _userRepo.SaveChangesAsync();
-        return MapToDto(user);
+        return MapCurrentToDto(user);
     }
 
     public async Task<UpdateUserResult> GoogleLoginAsync(GoogleUserInfo googleUser)
@@ -56,7 +54,7 @@ public class UserService : IUserService
         var user = await _userRepo.GetByGoogleIdAsync(googleUser.GoogleId);
         if (user is not null)
         {
-            return UpdateUserResult.Ok(MapToDto(user));
+            return UpdateUserResult.Ok(MapCurrentToDto(user));
         }
 
         // Never link automatically by e-mail: anyone can sign up with someone else's e-mail
@@ -87,13 +85,25 @@ public class UserService : IUserService
         };
         await _userRepo.AddAsync(user);
         await _userRepo.SaveChangesAsync();
-        return UpdateUserResult.Ok(MapToDto(user));
+        return UpdateUserResult.Ok(MapCurrentToDto(user));
     }
 
     public async Task<UserResponseDto?> GetUserByIdAsync(int id) // READ
     {
         var user = await _userRepo.GetByIdAsync(id);
-        return user is null ? null : MapToDto(user);
+        if(user == null)
+            throw new KeyNotFoundException("User not found");
+
+        return MapToDto(user);
+    }
+
+    public async Task<UserResponseDto?> GetCurrentUserByIdAsync(int id) // READ
+    {
+        var user = await _userRepo.GetByIdAsync(id);
+        if(user == null)
+            throw new KeyNotFoundException("User not found");
+
+        return MapCurrentToDto(user);
     }
 
     public async Task<LoginResult> GetUserByUsernameAndPasswordAsync(string username, string password) // READ
@@ -124,7 +134,7 @@ public class UserService : IUserService
         user.LockedUntil = null;
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync();
-        return new LoginResult(LoginStatus.Success, MapToDto(user));
+        return new LoginResult(LoginStatus.Success, MapCurrentToDto(user));
     }
 
     public async Task<IEnumerable<UserResponseDto>> SearchUsersByKeywordAsync(string keyword) // READ
@@ -137,14 +147,13 @@ public class UserService : IUserService
     {
         var user = await _userRepo.GetByIdAsync(id); 
         if (user is null)
-        {
-            return null; // User not found
-        }
+            throw new KeyNotFoundException("User not found");
+
         user.Username = dto.NewUsername;
         user.UpdatedAt = DateTime.UtcNow;
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync();
-        return MapToDto(user);
+        return MapCurrentToDto(user);
     }
 
     public async Task<UpdateUserResult> UpdateEmailAsync(int id, UpdateEmailDto dto) // UPDATE
@@ -171,7 +180,7 @@ public class UserService : IUserService
         user.UpdatedAt = DateTime.UtcNow;
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync();
-        return UpdateUserResult.Ok(MapToDto(user));
+        return UpdateUserResult.Ok(MapCurrentToDto(user));
     }
 
     public async Task<UpdateUserResult> UpdatePasswordAsync(int id, UpdatePasswordDto dto) // UPDATE
@@ -188,7 +197,7 @@ public class UserService : IUserService
         user.UpdatedAt = DateTime.UtcNow;
         _userRepo.Update(user);
         await _userRepo.SaveChangesAsync();
-        return UpdateUserResult.Ok(MapToDto(user));
+        return UpdateUserResult.Ok(MapCurrentToDto(user));
     }
 
     public async Task<bool> DeleteUserAsync(int id) // DELETE
@@ -196,7 +205,7 @@ public class UserService : IUserService
         var user = await _userRepo.GetByIdAsync(id);
         if (user is null)
         {
-            return false; // User not found
+            throw new KeyNotFoundException("User not found");
         }
         else
         {
@@ -210,6 +219,17 @@ public class UserService : IUserService
 
     // Helper method to map User entity to UserResponseDto (MapToDto)
     private UserResponseDto MapToDto(User user) 
+    {
+        return new UserResponseDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            //CreatedAt = user.CreatedAt,
+            //UpdatedAt = user.UpdatedAt
+        };
+    }
+
+    private UserResponseDto MapCurrentToDto(User user) 
     {
         return new UserResponseDto
         {
@@ -241,13 +261,15 @@ public class UserService : IUserService
                 ? new LoginResult(LoginStatus.AccountLocked, LockedUntil: user.LockedUntil)
                 : new LoginResult(LoginStatus.InvalidCredentials);
         }
-
+        
+        // Does NOT reset the failed attempts here because an attacker who knows the password could
+        // alternate between the correct password and wrong 2fa codes and never be locked out
         if (user.TwoFactorEnabled)
-            return new LoginResult(LoginStatus.TwoFactorRequired, MapToDto(user));
+            return new LoginResult(LoginStatus.TwoFactorRequired, MapCurrentToDto(user));
 
 
         await ResetFailedLoginsAsync(user);
-        return new LoginResult(LoginStatus.Success, MapToDto(user));
+        return new LoginResult(LoginStatus.Success, MapCurrentToDto(user));
     }
 
     private async Task RegisterFailedLoginAsync(User user)

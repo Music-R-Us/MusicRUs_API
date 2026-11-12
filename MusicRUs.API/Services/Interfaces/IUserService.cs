@@ -11,6 +11,7 @@ public interface IUserService
     // GOOGLE LOGIN
     Task<UpdateUserResult> GoogleLoginAsync(GoogleUserInfo googleUser); // CREATE or READ
     Task<UserResponseDto?> GetUserByIdAsync(int id); // READ
+    Task<UserResponseDto?> GetCurrentUserByIdAsync(int id); // READ
     Task<LoginResult> GetUserByUsernameAndPasswordAsync(string username, string password); // READ
     Task<LoginResult> GetUserByEmailAndPasswordAsync(string email, string password); // READ
     Task<LoginResult> VerifyTwoFactorLoginAsync(int userId, string code); // READ

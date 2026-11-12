@@ -19,6 +19,7 @@ using MusicRUs.API.Backend.Logic.Encryption;
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.OpenApi;
 using MusicRUs.API.Backend.Logic.TwoFactor;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,7 +29,30 @@ builder.Services.AddControllers();
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+        {
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT", 
+            Description = "Paste the accessToken from login (without 'Bearer ' prefix)."
+        };
+
+        document.Security = 
+        [
+            new OpenApiSecurityRequirement
+            {
+                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+            }
+        ];
+        return Task.CompletedTask;
+    });
+});
 
 builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
@@ -150,6 +174,7 @@ builder.Services.AddScoped<IConcertRepository, ConcertRepository>();
 builder.Services.AddScoped<IFriendshipRepository, FriendshipRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 builder.Services.AddScoped<IUserBlockRepository, UserBlockRepository>();
+builder.Services.AddScoped<IArtistSubscriptionRepository, ArtistSubscriptionRepository>();
 
 // Services (Registering services for Dependency Injection)
 builder.Services.AddScoped<IUserService, UserService>();
@@ -167,6 +192,7 @@ builder.Services.AddScoped<IConcertService, ConcertService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IUserBlockService, UserBlockService>();
+builder.Services.AddScoped<IArtistSubscriptionService, ArtistSubscriptionService>();
 
 // Database
 var connectionString = builder.Configuration.GetConnectionString("MusicRUs")

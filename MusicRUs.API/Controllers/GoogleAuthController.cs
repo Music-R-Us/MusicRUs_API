@@ -37,9 +37,8 @@ public class GoogleAuthController : ControllerBase
             return Conflict(new { message = "An account with this e-mail already exists. Log in with your password." });
 
         var user = result.User!;
-
-        // Does NOT reset the failed attempts here because an attacker who knows the password could
-        // alternate between the correct password and wrong 2fa codes and never be locked out
+       
+       // Users with 2FA must also enter a code from their authenticator app
         if (user.TwoFactorEnabled)
             return Accepted(_tokenService.CreateTwoFactorChallenge(user.Id));
         
