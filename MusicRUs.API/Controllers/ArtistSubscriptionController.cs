@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicRUs.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using MusicRUs.API.Backend.Logic.Jwt;
 using MusicRUs.API.DTOs;
 
 namespace MusicRUs.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ArtistSubscriptionController : ControllerBase
 {
     private readonly IArtistSubscriptionService _asService;
@@ -20,13 +23,17 @@ public class ArtistSubscriptionController : ControllerBase
     // CREATE
     //##############################################################################
     // Create a new artist subscription
-    [HttpPost("subscribe/{userId:int}/{artistId:int}")]
-    public async Task<ActionResult<ArtistSubscriptionResponseDto>> Subscribe(int userId, int artistId, [FromBody] CreateArtistSubscriptionDto dto)
+    [HttpPost("user/me/artist/{artistId:int}")]
+    public async Task<ActionResult<ArtistSubscriptionResponseDto>> Subscribe(int artistId, [FromBody] CreateArtistSubscriptionDto dto)
     {
         try
         {
-            var subscription = await _asService.SubscribeAsync(userId, artistId, dto);
-            return CreatedAtAction(nameof(GetSubscriptionByUserAndArtist), new { UserId = userId, ArtistId = artistId }, subscription);
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            var subscription = await _asService.SubscribeAsync(userId.Value, artistId, dto);
+            return CreatedAtAction(nameof(GetSubscriptionByUserAndArtist), new { artistId }, subscription);
         }
         catch (KeyNotFoundException ex)
         {
@@ -41,12 +48,16 @@ public class ArtistSubscriptionController : ControllerBase
     // READ
     //##############################################################################
     // Get artist subscription by userId and artistId
-    [HttpGet("user/{userId:int}/artist/{artistId:int}")]
-    public async Task<ActionResult<ArtistSubscriptionResponseDto>> GetSubscriptionByUserAndArtist(int userId, int artistId)
+    [HttpGet("user/me/artist/{artistId:int}")]
+    public async Task<ActionResult<ArtistSubscriptionResponseDto>> GetSubscriptionByUserAndArtist(int artistId)
     {
         try
         {
-            var subscription = await _asService.GetSubscriptionByUserAndArtistAsync(userId, artistId);
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            var subscription = await _asService.GetSubscriptionByUserAndArtistAsync(userId.Value, artistId);
             return Ok(subscription);
         }
         catch (KeyNotFoundException ex)
@@ -56,22 +67,30 @@ public class ArtistSubscriptionController : ControllerBase
     }
 
     // Get all artist subscriptions for a user
-    [HttpGet("user/{userId:int}")]
-    public async Task<ActionResult<List<ArtistSubscriptionResponseDto>>> GetAllSubscriptionsByUser(int userId)
+    [HttpGet("user/me")]
+    public async Task<ActionResult<List<ArtistSubscriptionResponseDto>>> GetAllSubscriptionsByUser()
     {
-        var subscriptions = await _asService.GetAllSubscriptionsByUserAsync(userId);
+        var userId = User.GetUserId();
+        if(userId == null)
+            return Unauthorized();
+
+        var subscriptions = await _asService.GetAllSubscriptionsByUserAsync(userId.Value);
         return Ok(subscriptions);
     }
 
     // UPDATE
     //##############################################################################
     // Update an artist subscription
-    [HttpPut("user/{userId:int}/artist/{artistId:int}")]
-    public async Task<ActionResult<ArtistSubscriptionResponseDto>> UpdateSubscription(int userId, int artistId, [FromBody] ArtistSubscriptionUpdateDto dto)
+    [HttpPut("user/me/artist/{artistId:int}")]
+    public async Task<ActionResult<ArtistSubscriptionResponseDto>> UpdateSubscription(int artistId, [FromBody] ArtistSubscriptionUpdateDto dto)
     {
         try
         {
-            var subscription = await _asService.UpdateSubscriptionAsync(userId, artistId, dto);
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            var subscription = await _asService.UpdateSubscriptionAsync(userId.Value, artistId, dto);
             return Ok(subscription);
         }
         catch (KeyNotFoundException ex)
@@ -83,12 +102,16 @@ public class ArtistSubscriptionController : ControllerBase
     // DELETE
     //##############################################################################
     // Delete an artist subscription
-    [HttpDelete("user/{userId:int}/artist/{artistId:int}")]
-    public async Task<IActionResult> DeleteSubscription(int userId, int artistId)
+    [HttpDelete("user/me/artist/{artistId:int}")]
+    public async Task<IActionResult> DeleteSubscription(int artistId)
     {
         try
         {
-            await _asService.DeleteSubscriptionAsync(userId, artistId);
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            await _asService.DeleteSubscriptionAsync(userId.Value, artistId);
             return NoContent();
         }
         catch (KeyNotFoundException ex)

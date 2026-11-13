@@ -5,7 +5,7 @@ namespace MusicRUs.API.DTOs;
 public class CreateArtistSubscriptionDto
 {
     [MaxLength(2)] 
-    [RegularExpression("^[A-Z]{2}$", ErrorMessage = "Country code must be two uppercase letters")]
+    [RegularExpression("^[A-Za-z]{2}$", ErrorMessage = "Country code must be two letters (e.g. UK)")]
     public string? CountryCode { get; set; }
     [MaxLength(100)]
     public string? Region { get; set; }
@@ -28,6 +28,7 @@ public class ArtistSubscriptionResponseDto
 public class ArtistSubscriptionUpdateDto
 {
     [MaxLength(2)] 
+    [RegularExpression("^[A-Za-z]{2}$", ErrorMessage = "Country code must be two letters (e.g. UK)")]
     public string? CountryCode { get; set; }
     [MaxLength(100)]
     public string? Region { get; set; }

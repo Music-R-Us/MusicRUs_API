@@ -54,7 +54,7 @@ public class ArtistSubscriptionService : IArtistSubscriptionService
         return MapToDto(saved!);
     }
 
-    public async Task<ArtistSubscriptionResponseDto?> GetSubscriptionByUserAndArtistAsync(int userId, int artistId) // READ
+    public async Task<ArtistSubscriptionResponseDto> GetSubscriptionByUserAndArtistAsync(int userId, int artistId) // READ
     {
         var subscription = await _asRepo.GetSubscriptionByUserAndArtistAsync(userId, artistId);
         if(subscription == null)
