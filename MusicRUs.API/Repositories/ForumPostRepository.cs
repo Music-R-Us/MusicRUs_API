@@ -21,37 +21,38 @@ public class ForumPostRepository : Repository<ForumPost>, IForumPostRepository
     public override async Task<ForumPost?> GetByIdAsync(int id)
     => await IncludeRelatedEntities()
         .Include(fp => fp.Comments)
+        .ThenInclude(c => c.User)
         .FirstOrDefaultAsync(fp => fp.Id == id);
 
     public override async Task<IEnumerable<ForumPost>> GetAllAsync()
     => await IncludeRelatedEntities()
         .ToListAsync();
 
-    public async Task<IEnumerable<ForumPost>?> GetForumPostsByUserIdAsync(int userId)
+    public async Task<IEnumerable<ForumPost>> GetForumPostsByUserIdAsync(int userId)
     => await IncludeRelatedEntities()
         .Where(fp => fp.UserId == userId)
         .ToListAsync();
 
-    public async Task<IEnumerable<ForumPost>?> GetForumPostsByTrackIdAsync(int trackId)
+    public async Task<IEnumerable<ForumPost>> GetForumPostsByTrackIdAsync(int trackId)
     => await IncludeRelatedEntities()
         .Where(fp => fp.TrackId == trackId)
         .ToListAsync();
 
-    public async Task<IEnumerable<ForumPost>?> GetForumPostsByAlbumIdAsync(int albumId)
+    public async Task<IEnumerable<ForumPost>> GetForumPostsByAlbumIdAsync(int albumId)
     => await IncludeRelatedEntities()
         .Where(fp => fp.AlbumId == albumId)
         .ToListAsync();
 
-    public async Task<IEnumerable<ForumPost>?> GetForumPostsByArtistIdAsync(int artistId)
+    public async Task<IEnumerable<ForumPost>> GetForumPostsByArtistIdAsync(int artistId)
     => await IncludeRelatedEntities()
         .Where(fp => fp.ArtistId == artistId)
         .ToListAsync();
 
-    public async Task<IEnumerable<ForumPost>?> GetForumPostsByGenreIdAsync(int genreId)
+    public async Task<IEnumerable<ForumPost>> GetForumPostsByGenreIdAsync(int genreId)
     => await IncludeRelatedEntities()
         .Where(fp => fp.Genres.Any(g => g.Id == genreId))
         .ToListAsync();
 
-    public async Task<IEnumerable<ForumPost>?> SearchForumPostsByKeywordAsync(string keyword)
+    public async Task<IEnumerable<ForumPost>> SearchForumPostsByKeywordAsync(string keyword)
     => await SearchAsync(fp =>  EF.Functions.ILike(fp.Title, $"%{keyword}%") || EF.Functions.ILike(fp.Content, $"%{keyword}%"));
 }

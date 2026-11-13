@@ -5,6 +5,6 @@ namespace MusicRUs.API.Repositories.Interfaces;
 public interface ICommentRepository : IRepository<Comment>
 {
     Task<Comment?> GetByUserIdAsync(int userId);
-    Task<IEnumerable<Comment>?> GetCommentsByUserIdAsync(int userId);
-    Task<IEnumerable<Comment>?> GetAllCommentsByForumPostIdAsync(int forumPostId);
+    Task<IEnumerable<Comment>> GetCommentsByUserIdAsync(int userId);
+    Task<IEnumerable<Comment>> GetAllCommentsByForumPostIdAsync(int forumPostId);
 }

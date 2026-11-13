@@ -4,7 +4,7 @@ namespace MusicRUs.API.Services.Interfaces
 {
     public interface IForumPostService
     {
-        Task<ForumPostResponseDto> CreateForumPostAsync(CreateForumPostDto dto); // CREATE
+        Task<ForumPostResponseDto> CreateForumPostAsync(int userId, CreateForumPostDto dto); // CREATE
         Task<ForumPostWithCommentsDto> GetForumPostByIdAsync(int id); // READ
         Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByUserIdAsync(int userId); // READ
         Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByTrackIdAsync(int trackId); // READ
@@ -14,6 +14,6 @@ namespace MusicRUs.API.Services.Interfaces
         Task<IEnumerable<ForumPostResponseDto>> GetAllForumPostsAsync(); // READ
         Task<IEnumerable<ForumPostResponseDto>> SearchForumPostsByKeywordAsync(string keyword); // READ
         Task<ForumPostResponseDto> UpdateForumPostAsync(int id, int userId,ForumPostUpdateDto dto); // UPDATE
-        Task<bool> DeleteForumPostAsync(int id); // DELETE
+        Task DeleteForumPostAsync(int id, int userId); // DELETE
     }
 }

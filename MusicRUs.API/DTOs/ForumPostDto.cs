@@ -8,8 +8,8 @@ namespace MusicRUs.API.DTOs;
 // In other words, a 'payload' for specific operations that is sent to the API. 
 public class CreateForumPostDto // DTO for creating a new forum post
 {
-    [Required]
-    public int UserId { get; set; }
+    //[Required]
+    //public int UserId { get; set; }
     [Required]
     [MinLength(2)]
     public string Title { get; set; } = null!; 

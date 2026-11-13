@@ -8,12 +8,18 @@ public class CommentRepository : Repository<Comment>, ICommentRepository
 {
     public CommentRepository(DbContext context) : base(context) { }
 
-    public async Task<Comment?> GetByUserIdAsync(int userId)
-        => await _dbSet.FirstOrDefaultAsync(c => c.UserId == userId);
+    public override async Task<Comment?> GetByIdAsync(int id)
+        => await _dbSet.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == id);
 
-    public async Task<IEnumerable<Comment>?> GetCommentsByUserIdAsync(int userId)
+    public async Task<Comment?> GetByUserIdAsync(int userId)
+        => await _dbSet.Include(c => c.User).FirstOrDefaultAsync(c => c.UserId == userId);
+
+    public async Task<IEnumerable<Comment>> GetCommentsByUserIdAsync(int userId)
         => await _dbSet.Where(c => c.UserId == userId).ToListAsync();
 
-    public async Task<IEnumerable<Comment>?> GetAllCommentsByForumPostIdAsync(int postId)
-    => await _dbSet.Where(c => c.PostId == postId).ToListAsync();
+    public async Task<IEnumerable<Comment>> GetAllCommentsByForumPostIdAsync(int postId)
+        => await _dbSet
+            .Where(c => c.PostId == postId)
+            .Include(c => c.User)
+            .ToListAsync();
 }

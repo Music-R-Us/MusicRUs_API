@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicRUs.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using MusicRUs.API.Backend.Logic.Jwt;
 using MusicRUs.API.DTOs;
 
 namespace MusicRUs.API.Controllers;
@@ -9,12 +11,10 @@ namespace MusicRUs.API.Controllers;
 public class ForumPostController : ControllerBase
 {
     private readonly IForumPostService _fpService;
-    private readonly IUserService _userService;
 
-    public ForumPostController(IForumPostService fpService, IUserService userService)
+    public ForumPostController(IForumPostService fpService)
     {
         _fpService  = fpService;
-        _userService = userService;
     }
 
     // Implement the endpoints for user-related operations
@@ -23,22 +23,25 @@ public class ForumPostController : ControllerBase
     //##############################################################################
     // Create ForumPost
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<ForumPostResponseDto>> CreateForumPost([FromBody] CreateForumPostDto dto)
     {
         try
         {
-            var user = await _userService.GetUserByIdAsync(dto.UserId);
-            if (user == null)
-            {
-                return NotFound($"User with ID {dto.UserId} not found.");
-            }
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
 
-            var fp = await _fpService.CreateForumPostAsync(dto);
+            var fp = await _fpService.CreateForumPostAsync(userId.Value, dto);
             return CreatedAtAction(nameof(GetForumPostById), new { id = fp.Id }, fp);
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new {error = ex.Message});
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
         }
     }
 
@@ -48,110 +51,126 @@ public class ForumPostController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ForumPostResponseDto>> GetForumPostById(int id)
     {
-        var fp = await _fpService.GetForumPostByIdAsync(id);
-        if (fp == null)
-            return NotFound();
-
-        return Ok(fp);
+        try
+        {
+            var fp = await _fpService.GetForumPostByIdAsync(id);
+            return Ok(fp);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // Get ForumPosts by User ID
     [HttpGet("user/{userId:int}")]
-    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetForumPostsByUserId(int userId)
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetForumPostsByUserId(int userId)
     {
-        var user = await _userService.GetUserByIdAsync(userId);
-        if (user == null)
-            return NotFound();
-
-        var fps = await _fpService.GetForumPostsByUserIdAsync(userId);
-        return Ok(fps);
+        try
+        {
+            var fps = await _fpService.GetForumPostsByUserIdAsync(userId);
+            return Ok(fps);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // Get ForumPosts by Tracks ID
     [HttpGet("track/{trackId:int}")]
-    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetForumPostsByTrackId(int trackId)
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetForumPostsByTrackId(int trackId)
     {
         var fps = await _fpService.GetForumPostsByTrackIdAsync(trackId);
-        if (fps == null)
-            return NotFound();
-
         return Ok(fps);
     }
 
     // Get ForumPosts by Album ID
     [HttpGet("album/{albumId:int}")]
-    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetForumPostsByAlbumId(int albumId)
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetForumPostsByAlbumId(int albumId)
     {
         var fps = await _fpService.GetForumPostsByAlbumIdAsync(albumId);
-        if (fps == null)
-            return NotFound();
-
         return Ok(fps);
     }
 
     // Get ForumPosts by Artist ID
     [HttpGet("artist/{artistId:int}")]
-    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetForumPostsByArtistId(int artistId)
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetForumPostsByArtistId(int artistId)
     {
         var fps = await _fpService.GetForumPostsByArtistIdAsync(artistId);
-        if (fps == null)
-            return NotFound();
-
         return Ok(fps);
     }
 
     // Get ForumPosts by Genre ID
     [HttpGet("genre/{genreId:int}")]
-    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetForumPostsByGenreId(int genreId)
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetForumPostsByGenreId(int genreId)
     {
         var fps = await _fpService.GetForumPostsByGenreIdAsync(genreId);
-        if (fps == null)
-            return NotFound();
-
         return Ok(fps);
     }
 
     // Get all ForumPosts
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ForumPostResponseDto?>>> GetAllForumPosts()
+    public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetAllForumPosts()
     {
         var fps = await _fpService.GetAllForumPostsAsync();
-        if (fps == null)
-            return NotFound();
-
         return Ok(fps);
     }
 
     // UPDATE
     //##############################################################################
     // Update ForumPost
+    [Authorize]
     [HttpPatch("updateForumPost/{id:int}")]
-    public async Task<ActionResult<ForumPostResponseDto?>> UpdateForumPost(int id, int userId, [FromBody] ForumPostUpdateDto dto)
+    public async Task<ActionResult<ForumPostResponseDto?>> UpdateForumPost(int id, [FromBody] ForumPostUpdateDto dto)
     {
         try
         {
-            var fp = await _fpService.UpdateForumPostAsync(id, userId, dto);
-            if(fp == null)
-                return NotFound();
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            var fp = await _fpService.UpdateForumPostAsync(id, userId.Value, dto);
 
             return Ok(fp);
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new {error = ex.Message});
+            return BadRequest(ex.Message);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
         }
     }
 
     // DELETE
     //##############################################################################
     // Delete ForumPost
+    [Authorize]
     [HttpDelete("deleteForumPost/{id:int}")]
     public async Task<ActionResult> DeleteForumPost(int id)
     {
-        var success = await _fpService.DeleteForumPostAsync(id);
-        if(!success)
-            return NotFound();
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
 
-        return NoContent(); 
+            await _fpService.DeleteForumPostAsync(id, userId.Value);
+            return NoContent(); 
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
     }
 }

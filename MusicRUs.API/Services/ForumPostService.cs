@@ -10,21 +10,27 @@ public class ForumPostService : IForumPostService
 {
     private readonly IForumPostRepository _fpRepo;
     private readonly IGenreRepository _genreRepo;
+    private readonly IUserRepository _userRepo;
 
-    public ForumPostService(IForumPostRepository fpRepo, IGenreRepository genreRepo) 
+    public ForumPostService(IForumPostRepository fpRepo, IGenreRepository genreRepo, IUserRepository userRepo) 
     {
         _fpRepo = fpRepo;  // Dependency Inversion for ForumPost repository (Dependency Inversion Principle)
         _genreRepo = genreRepo;  // Dependency Inversion for Genre repository (Dependency Inversion Principle)
+        _userRepo = userRepo; // Dependency Inversion for User repository (Dependency Inversion Principle)
     }
 
     // Implement the methods defined in IForumPost interface
 
-    public async Task<ForumPostResponseDto> CreateForumPostAsync(CreateForumPostDto dto) // CREATE
+    public async Task<ForumPostResponseDto> CreateForumPostAsync(int userId, CreateForumPostDto dto) // CREATE
     {
+        var user = await _userRepo.GetByIdAsync(userId);
+        if(user == null)
+            throw new KeyNotFoundException("User not found.");
+
         // Create new ForumPost entity
         var fp = new ForumPost // Map properties from dto to entity
         {
-            UserId = dto.UserId,
+            UserId = userId,
             Title = dto.Title,
             Content = dto.Content,
             TrackId = dto.TrackId,
@@ -54,16 +60,18 @@ public class ForumPostService : IForumPostService
     {
         var fp = await _fpRepo.GetByIdAsync(id);
         if(fp == null)
-            return null!;
+            throw new KeyNotFoundException("Forum post not found.");
 
         return MapToDtoWithComments(fp);
     }
 
     public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByUserIdAsync(int userId) // READ
     {
-        var fps = await _fpRepo.GetForumPostsByUserIdAsync(userId);
-        if(fps == null)
-            return null!;
+        var user = await _userRepo.GetByIdAsync(userId);
+        if(user == null)
+            throw new KeyNotFoundException("User not found.");
+        
+        var fps = await _fpRepo.GetForumPostsByUserIdAsync(user.Id);
 
         return fps.Select(MapToDto).ToList();
     }
@@ -71,8 +79,6 @@ public class ForumPostService : IForumPostService
     public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByTrackIdAsync(int trackId) // READ
     {
         var fps = await _fpRepo.GetForumPostsByTrackIdAsync(trackId);
-        if(fps == null)
-            return null!;
 
         return fps.Select(MapToDto).ToList();
     }
@@ -80,35 +86,24 @@ public class ForumPostService : IForumPostService
     public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByAlbumIdAsync(int albumId) // READ
     {
         var fps = await _fpRepo.GetForumPostsByAlbumIdAsync(albumId);
-        if(fps == null)
-            return null!;
-
         return fps.Select(MapToDto).ToList();
     }
 
     public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByArtistIdAsync(int artistId) // READ
     {
         var fps = await _fpRepo.GetForumPostsByArtistIdAsync(artistId);
-        if(fps == null)
-            return null!;
-
         return fps.Select(MapToDto).ToList();
     }
 
     public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByGenreIdAsync(int genreId) // READ
     {
         var fps = await _fpRepo.GetForumPostsByGenreIdAsync(genreId);
-        if(fps == null)
-            return null!;
-
         return fps.Select(MapToDto).ToList();
     }
 
     public async Task<IEnumerable<ForumPostResponseDto>> GetAllForumPostsAsync() // READ
     {
         var fps = await _fpRepo.GetAllAsync();
-        if(fps == null)
-            return null!;
 
         return fps.Select(MapToDto).ToList();
     }
@@ -116,8 +111,6 @@ public class ForumPostService : IForumPostService
     public async Task<IEnumerable<ForumPostResponseDto>> SearchForumPostsByKeywordAsync(string keyword) // READ
     {
         var fps = await _fpRepo.SearchForumPostsByKeywordAsync(keyword);
-        if(fps == null)
-            return null!;
 
         return fps.Select(MapToDto).ToList();
     }
@@ -126,10 +119,10 @@ public class ForumPostService : IForumPostService
     {
         var fp = await _fpRepo.GetByIdAsync(id);
         if(fp == null)
-            throw new ArgumentException("Forum post not found.");
+            throw new KeyNotFoundException("Forum post not found.");
         
         if(fp.UserId != userId)
-            throw new ArgumentException("User is not authorized to update this post.");
+            throw new UnauthorizedAccessException("User is not authorized to update this post.");
 
         fp.Title = dto.Title ?? fp.Title; // Update title if provided
         fp.Content = dto.Content ?? fp.Content;
@@ -152,15 +145,18 @@ public class ForumPostService : IForumPostService
         return MapToDto(saved!); // Map the saved entity to DTO and return
     }
 
-    public async Task<bool> DeleteForumPostAsync(int id) // DELETE
+    public async Task DeleteForumPostAsync(int id, int userId) // DELETE
     {
+
         var fp = await _fpRepo.GetByIdAsync(id);
         if(fp == null)
-            return false;
+            throw new KeyNotFoundException("Forum post not found.");
         
+        if(fp.UserId != userId)
+            throw new UnauthorizedAccessException("User is not authorized to delete this post.");
+
         _fpRepo.Delete(fp);
         await _fpRepo.SaveChangesAsync();
-        return true;
     }
 
     //#########################################
@@ -208,7 +204,14 @@ public class ForumPostService : IForumPostService
                 .Select(g => new GenreIncludeDto { Id = g.Id, Name = g.Name })
                 .ToList(),
             Comments = fp.Comments
-                .Select(c => new CommentIncludeDto { Id = c.Id, UserId = c.UserId, Content = c.Content, CreatedAt = c.CreatedAt })
+                .Select(c => new CommentIncludeDto { 
+                    Id = c.Id, 
+                    PostId = c.PostId,
+                    UserId = c.UserId, 
+                    User = new UserIncludeDto { Id = c.User.Id, Username = c.User.Username },
+                    Content = c.Content, 
+                    CreatedAt = c.CreatedAt, 
+                    UpdatedAt = c.UpdatedAt })
                 .ToList()
         };
     }

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicRUs.API.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using MusicRUs.API.Backend.Logic.Jwt;
 using MusicRUs.API.DTOs;
 
 namespace MusicRUs.API.Controllers;
@@ -20,11 +22,23 @@ public class CommentController : ControllerBase
     // CREATE
     //##############################################################################
     // Create a comment
-    [HttpPost]
+    [HttpPost("forumpost/{postId:int}")]
+    [Authorize]
     public async Task<ActionResult<CommentResponseDto>> CreateComment(int postId, CreateCommentDto dto)
     {
-        var comment = await _commentService.CreateCommentAsync(postId, dto);
-        return Ok(comment);
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            var comment = await _commentService.CreateCommentAsync(postId, userId.Value, dto);
+            return CreatedAtAction(nameof(GetCommentById), new { id = comment.Id }, comment);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // READ
@@ -34,35 +48,81 @@ public class CommentController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<CommentResponseDto>> GetCommentById(int id)
     {
-        var comment = await _commentService.GetCommentByIdAsync(id);
-        return Ok(comment);
+        try
+        {
+            var comment = await _commentService.GetCommentByIdAsync(id);
+            return Ok(comment);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // Get all comments for a forum post
     [HttpGet("forumpost/{postId:int}")]
     public async Task<ActionResult<IEnumerable<CommentResponseDto>>> GetAllCommentsByForumPostId(int postId)
     {
-        var comments = await _commentService.GetAllCommentsByForumPostIdAsync(postId);
-        return Ok(comments);
+        try
+        {
+            var comments = await _commentService.GetAllCommentsByForumPostIdAsync(postId);
+            return Ok(comments);   
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // UPDATE
     //##############################################################################
     // Update comment
     [HttpPatch("{id:int}")]
+    [Authorize]
     public async Task<ActionResult<CommentResponseDto>> UpdateComment(int id, CommentUpdateDto dto)
     {
-        var comment = await _commentService.UpdateCommentAsync(id, dto);
-        return Ok(comment);
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            var comment = await _commentService.UpdateCommentAsync(id, userId.Value, dto);
+            return Ok(comment);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
     }
     
     // DELETE
     //##############################################################################
     // Delete comment
     [HttpDelete("{id:int}")]
+    [Authorize]
     public async Task<ActionResult<bool>> DeleteComment(int id)
     {
-        var result = await _commentService.DeleteCommentAsync(id);
-        return Ok(result);
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
+
+            await _commentService.DeleteCommentAsync(id, userId.Value);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ex.Message);
+        }
     }
 }

@@ -7,11 +7,13 @@ namespace MusicRUs.API.DTOs;
 
 public class CreateCommentDto // DTO for creating a new comment
 {
+    //[Required]
+    //public int UserId { get; set; }
+    //[Required]
+    //public int PostId { get; set; }
     [Required]
-    public int UserId { get; set; }
-    [Required]
-    public int PostId { get; set; }
-    [Required]
+    [MinLength(1)]
+    [MaxLength(500)]
     public string Content { get; set; } = null!;
 }
 
@@ -19,6 +21,7 @@ public class CommentResponseDto // DTO for returning comment data from the API
 {
     public int Id { get; set; }
     public int UserId { get; set; }
+    public UserIncludeDto User { get; set; } = null!;
     public int PostId { get; set; }
     public string Content { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
@@ -28,6 +31,8 @@ public class CommentResponseDto // DTO for returning comment data from the API
 public class CommentUpdateDto // DTO for updating an existing comment
 {
     [Required]
+    [MinLength(1)]
+    [MaxLength(500)]
     public string Content { get; set; } = null!;
 }
 
@@ -35,6 +40,7 @@ public class CommentIncludeDto // DTO for including comments data for a ForumPos
 {
     public int Id { get; set; }
     public int UserId { get; set; }
+    public UserIncludeDto User { get; set; } = null!;
     public int PostId { get; set; }
     public string Content { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
