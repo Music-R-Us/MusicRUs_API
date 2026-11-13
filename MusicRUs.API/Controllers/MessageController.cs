@@ -1,20 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using MusicRUs.API.Backend.Logic.Jwt;
 using MusicRUs.API.Services.Interfaces;
 using MusicRUs.API.DTOs;
 
 namespace MusicRUs.API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class MessageController : ControllerBase
 {
      private readonly IMessageService _messageService;
-     private readonly IUserService _userService;
 
-     public MessageController(IMessageService messageService, IUserService userService)
+     public MessageController(IMessageService messageService)
      {
          _messageService = messageService;
-         _userService = userService;
      }
 
     // Implement the endpoints for Message related operations
@@ -23,88 +24,107 @@ public class MessageController : ControllerBase
     //##############################################################################
     // Send a message
     [HttpPost]
-    public async Task<ActionResult<MessageResponseDto>> SendMessage(int senderId, int recipientId, [FromBody] CreateMessageDto Dto)
+    public async Task<ActionResult<MessageResponseDto>> SendMessage(int recipientId, [FromBody] CreateMessageDto Dto)
     {
         try
         {
-            var senderExists = await _userService.GetUserByIdAsync(senderId); // Check if sender exists
-            if (senderExists == null)
-                return NotFound("Sender not found");
+            var senderId = User.GetUserId();
+            if(senderId == null)
+                return Unauthorized();
 
-            var recipientExists = await _userService.GetUserByIdAsync(recipientId); // Check if recipient exists
-            if (recipientExists == null)
-                return NotFound("Recipient not found");
-
-            var message = await _messageService.SendMessageAsync(senderExists.Id, recipientExists.Id, Dto);
-            if (message == null)
-            {
-                return BadRequest("Failed to send message");
-            }
+            var message = await _messageService.SendMessageAsync(senderId.Value, recipientId, Dto);
             return Ok(message);
         }
         catch (InvalidOperationException ex)
         {
             return BadRequest(ex.Message);
         }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // READ
     //##############################################################################
     // Get Messages by sender and recipient Id
-    [HttpGet("sender/{senderId:int}/recipient/{recipientId:int}")]
-    public async Task<ActionResult<List<MessageResponseDto>>> GetMessagesBySenderAndRecipient(int senderId, int recipientId)
+    [HttpGet("sender/me/recipient/{recipientId:int}")]
+    public async Task<ActionResult<List<MessageResponseDto>>> GetMessagesBySenderAndRecipient(int recipientId)
     {
-        var senderExists = await _userService.GetUserByIdAsync(senderId); // Check if sender exists
-        if (senderExists == null)
-            return NotFound("Sender not found");
+        try
+        {
+            var senderId = User.GetUserId();
+            if(senderId == null)
+                return Unauthorized();
 
-        var recipientExists = await _userService.GetUserByIdAsync(recipientId); // Check if recipient exists
-        if (recipientExists == null)
-            return NotFound("Recipient not found");
-
-        var messages = await _messageService.GetMessagesBySenderAndRecipientIdAsync(senderId, recipientId);
-        return Ok(messages);
+            var messages = await _messageService.GetMessagesBySenderAndRecipientIdAsync(senderId.Value, recipientId);
+            return Ok(messages);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // Get latest messages (conversation) for a specific user
-    [HttpGet("latestConversation/user/{userId:int}")]
-    public async Task<ActionResult<List<MessageResponseDto>>> GetLatestConversation(int userId)
+    [HttpGet("latestConversation/me")]
+    public async Task<ActionResult<List<MessageResponseDto>>> GetLatestConversation()
     {
-        var userExists = await _userService.GetUserByIdAsync(userId); // Check if user exists
-        if (userExists == null)
-            return NotFound("User not found");
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
 
-        var messages = await _messageService.GetLatestConversationAsync(userId);
-        return Ok(messages);
+            var messages = await _messageService.GetLatestConversationAsync(userId.Value);
+            return Ok(messages);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // UPDATE
     //##############################################################################
     // Mark a message as read
-    [HttpPatch("{messageId:int}/{userId:int}")]
-    public async Task<ActionResult<MessageResponseDto>> MarkMessageAsRead(int messageId, int userId)
+    [HttpPatch("{messageId:int}/me")]
+    public async Task<ActionResult<MessageResponseDto>> MarkMessageAsRead(int messageId)
     {
-        var message = await _messageService.GetMessageByIdAsync(messageId);
-        if (message == null)
-            return NotFound("Message not found");
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
 
-        var updatedMessage = await _messageService.MarkMessageAsReadAsync(messageId, userId);
-        if (updatedMessage == null)
-            return BadRequest("Failed to update message");
+            var updatedMessage = await _messageService.MarkMessageAsReadAsync(messageId, userId.Value);
 
-        return Ok(updatedMessage);
+            return Ok(updatedMessage);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // DELETE
     //##############################################################################
     // Delete a message
-    [HttpDelete("{messageId:int}/{userId:int}")]
-    public async Task<ActionResult<bool>> DeleteMessage(int messageId, int userId)
+    [HttpDelete("{messageId:int}/me")]
+    public async Task<ActionResult<bool>> DeleteMessage(int messageId)
     {
-        var result = await _messageService.DeleteMessageAsync(messageId, userId);
-        if (!result)
-            return BadRequest("Failed to delete message");
+        try
+        {
+            var userId = User.GetUserId();
+            if(userId == null)
+                return Unauthorized();
 
-        return Ok(result);
+            var result = await _messageService.DeleteMessageAsync(messageId, userId.Value);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 }

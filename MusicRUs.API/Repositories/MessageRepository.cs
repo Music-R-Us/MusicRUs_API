@@ -1,7 +1,6 @@
 using MusicRUs.API.Models.Entities;
 using MusicRUs.API.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata.Ecma335;
 
 namespace MusicRUs.API.Repositories;
 
@@ -16,6 +15,9 @@ public class MessageRepository : Repository<Message>, IMessageRepository
         .Include(m => m.Recipient);
 
 
+
+    public override async Task<Message?> GetByIdAsync(int id)
+        => await WithUsers().FirstOrDefaultAsync(m => m.Id == id);
 
     public async Task<List<Message>> GetMessagesBySenderAndRecipientIdAsync(int senderId, int recipientId)
         => await WithUsers()

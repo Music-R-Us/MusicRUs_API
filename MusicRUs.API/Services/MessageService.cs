@@ -9,14 +9,23 @@ public class MessageService : IMessageService
 {
     private readonly IMessageRepository _messageRepo;
     private readonly IUserBlockRepository _userBlockRepo;
-    public MessageService(IMessageRepository messageRepo, IUserBlockRepository userBlockRepo)
+    private readonly IUserService _userService;
+    public MessageService(IMessageRepository messageRepo, IUserBlockRepository userBlockRepo, IUserService userService)
     {
         _messageRepo = messageRepo;
         _userBlockRepo = userBlockRepo;
+        _userService = userService;
     }
 
     public async Task<MessageResponseDto> SendMessageAsync(int senderId, int recipientId, CreateMessageDto dto) // CREATE
     {
+        var senderExists = await _userService.GetUserByIdAsync(senderId);
+        if (senderExists == null)
+            throw new KeyNotFoundException("Sender not found.");
+        var recipientExists = await _userService.GetUserByIdAsync(recipientId);
+        if (recipientExists == null)
+            throw new KeyNotFoundException("Recipient not found.");
+
         var isBlocked = await _userBlockRepo.IsBlockedEitherWayAsync(senderId, recipientId);
         if (isBlocked)
             throw new InvalidOperationException("Cannot send message. Either you or the recepient is blocked.");
@@ -38,13 +47,20 @@ public class MessageService : IMessageService
     {
         var message = await _messageRepo.GetByIdAsync(id);
         if (message == null)
-            throw new Exception("Message not found.");
+            throw new KeyNotFoundException("Message not found.");
 
         return MapToDto(message);
     }
 
     public async Task<List<MessageResponseDto>> GetMessagesBySenderAndRecipientIdAsync(int senderId, int recipientId) // READ
     {
+        var senderExists = await _userService.GetUserByIdAsync(senderId);
+        if (senderExists == null)
+            throw new KeyNotFoundException("Sender not found.");
+        var recipientExists = await _userService.GetUserByIdAsync(recipientId);
+        if (recipientExists == null)
+            throw new KeyNotFoundException("Recipient not found.");
+
         var messages = await _messageRepo.GetMessagesBySenderAndRecipientIdAsync(senderId, recipientId);
         return messages.Select(MapToDto).ToList();
     }
@@ -59,8 +75,7 @@ public class MessageService : IMessageService
     {
         var message = await _messageRepo.GetByIdAsync(messageId);
         if (message == null || message.RecipientId != userId)
-            //throw new Exception("Message not found or access denied.");
-            return null!;
+            throw new KeyNotFoundException("Message not found or access denied.");
 
         message.ReadAt = DateTime.UtcNow;
         await _messageRepo.SaveChangesAsync();
@@ -71,8 +86,11 @@ public class MessageService : IMessageService
     public async Task<bool> DeleteMessageAsync(int messageId, int userId) // DELETE
     {
         var message = await _messageRepo.GetByIdAsync(messageId);
-        if (message == null || message.RecipientId != userId)
-            throw new Exception("Message not found or access denied.");
+        if (message == null)
+            throw new KeyNotFoundException("Message not found or access denied.");
+        
+        if(message.SenderId != userId)
+            throw new KeyNotFoundException("Access denied.");
 
         _messageRepo.Delete(message);
         await _messageRepo.SaveChangesAsync();

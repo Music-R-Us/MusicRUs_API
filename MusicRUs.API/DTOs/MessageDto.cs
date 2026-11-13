@@ -14,6 +14,7 @@ public class CreateMessageDto //DTO for creating a new message
     //public int RecipientId { get; set; }
 
     [Required]
+    [MaxLength(500)]
     public string Content { get; set; } = string.Empty;
 }
 
