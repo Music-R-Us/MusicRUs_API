@@ -9,16 +9,24 @@ namespace MusicRUs.API.Services;
 public class FriendshipService : IFriendshipService
 {
     private readonly IFriendshipRepository _fsRepo;
+    private readonly IUserBlockRepository _userBlockRepo;
 
-    public FriendshipService(IFriendshipRepository fsRepo)
+    public FriendshipService(IFriendshipRepository fsRepo, IUserBlockRepository userBlockRepo)
     {
         _fsRepo = fsRepo;
+        _userBlockRepo = userBlockRepo;
     }
 
     // Implement the methods defined in IFriendshipService interface
 
     public async Task<FriendshipResponseDto> CreateFsAsync(int requesterId, int addresseeId) // CREATE
     {
+        // Check if the either user blocked the other
+        var isBlocked = await _userBlockRepo.IsBlockedEitherWayAsync(requesterId, addresseeId) || await _userBlockRepo.IsBlockedEitherWayAsync(addresseeId, requesterId);
+        if (isBlocked) // bool
+            throw new InvalidOperationException("Cannot create friendship. One of the users has blocked the other.");
+
+        // Check if friendship already exists
         var existingFs = await _fsRepo.GetFsByRequesterAndAddresseeIdAsync(requesterId, addresseeId) ?? await _fsRepo.GetFsByRequesterAndAddresseeIdAsync(addresseeId, requesterId);
         if(existingFs != null)
             throw new InvalidOperationException("Friendship already exists.");
