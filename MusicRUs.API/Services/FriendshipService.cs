@@ -14,7 +14,7 @@ public class FriendshipService : IFriendshipService
     public FriendshipService(IFriendshipRepository fsRepo, IUserBlockRepository userBlockRepo)
     {
         _fsRepo = fsRepo;
-        _userBlockRepo = userBlockRepo;
+        _userBlockRepo = userBlockRepo; 
     }
 
     // Implement the methods defined in IFriendshipService interface

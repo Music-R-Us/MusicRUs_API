@@ -38,8 +38,8 @@ public class UserController : ControllerBase
         try
         {
             var user = await _userService.CreateUserAsync(dto);
-            var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user!.Id});
-            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, _tokenService.CreateAuthResponse(user));
+            //var fp = await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user!.Id});
+            return CreatedAtAction(nameof(GetUserById), new { id = user!.Id }, _tokenService.CreateAuthResponse(user));
         }
         catch (InvalidOperationException ex)
         {

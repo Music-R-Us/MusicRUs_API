@@ -42,7 +42,7 @@ public class GoogleAuthController : ControllerBase
         if (user.TwoFactorEnabled)
             return Accepted(_tokenService.CreateTwoFactorChallenge(user.Id));
         
-        await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
+        //await _fpService.CreateFpAsync(new CreateForumProfileDto { UserId = user.Id});
 
         return Ok(_tokenService.CreateAuthResponse(user));
     }

@@ -18,7 +18,7 @@ public class UserService : IUserService
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
     private readonly ITwoFactorService _twoFactorService;
 
-     public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IEncryptionService encryptionService, ITwoFactorService twoFactorService)
+    public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher, IEncryptionService encryptionService, ITwoFactorService twoFactorService)
     {
         _userRepo = userRepository;
         _passwordHasher = passwordHasher;
@@ -41,7 +41,8 @@ public class UserService : IUserService
             EmailHash = emailHash,
             PasswordHash = _passwordHasher.Hash(dto.Password).Value,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
+            Profile = new ForumProfile(),
         };
         await _userRepo.AddAsync(user);
         await _userRepo.SaveChangesAsync();
@@ -81,7 +82,8 @@ public class UserService : IUserService
             PasswordHash = null, // No password for Google login
             GoogleId = googleUser.GoogleId,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow, 
+            Profile = new ForumProfile(),
         };
         await _userRepo.AddAsync(user);
         await _userRepo.SaveChangesAsync();
