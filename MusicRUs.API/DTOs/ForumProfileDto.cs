@@ -34,8 +34,12 @@ public class ForumProfileUpdatedDto // DTO for updating forum profile data
 {
     public string? DisplayName { get; set; }
     public string? Bio { get; set; }
+
+    [RegularExpression(@"^https?://\S+$", ErrorMessage = "Avatar URL must start with http:// or https://.")]
     public string? AvatarUrl { get; set; }
     public string? Location { get; set; }
+    
+    [RegularExpression(@"^https?://\S+$", ErrorMessage = "Website must start with http:// or https://.")]
     public string? WebsiteUrl { get; set; }
 
     [RegularExpression("^#[0-9A-Fa-f]{6}$", ErrorMessage = "Color must be in the format #RRGGBB.")]

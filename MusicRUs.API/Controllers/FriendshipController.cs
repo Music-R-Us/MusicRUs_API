@@ -137,6 +137,11 @@ public class FriendshipController : ControllerBase
                 return Unauthorized();
             
             var fs = await _fsService.GetFsByIdAsync(id);
+
+            // Only the 2 users in the friendship may delete it
+            if (fs.RequesterId != userId && fs.AddresseeId != userId)
+                return StatusCode(StatusCodes.Status403Forbidden, "You are not part of this friendship.");
+                
             var requesterId = fs.RequesterId;
             var addresseeId = fs.AddresseeId;
 
