@@ -25,4 +25,10 @@ public class UserBlockRepository : Repository<UserBlock>, IUserBlockRepository
             .Include(ub => ub.Blocked)
             .Where(ub => ub.BlockerId == blockerId)
             .ToListAsync();
+
+    // Get Ids of all users with a block in either direction
+    public async Task<List<int>> GetBlockedUserIdsAsync(int userId)
+        => await _dbSet.Where(ub => ub.BlockedId == userId || ub.BlockerId == userId)
+            .Select(ub => ub.BlockerId == userId ? ub.BlockedId : ub.BlockerId)
+            .ToListAsync();
 }

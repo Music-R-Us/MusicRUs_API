@@ -8,10 +8,12 @@ namespace MusicRUs.API.Services;
 public class MusicCollectionService : IMusicCollectionService
 {
     private readonly IMusicCollectionRepository _mcRepo;
+    private readonly IUserBlockRepository _ubRepo;
 
-    public MusicCollectionService(IMusicCollectionRepository mcRepo)
+    public MusicCollectionService(IMusicCollectionRepository mcRepo, IUserBlockRepository ubRepo)
     {
         _mcRepo = mcRepo;
+        _ubRepo = ubRepo;
     }
 
     // Implement the methods defined in IMusicCollectionService here

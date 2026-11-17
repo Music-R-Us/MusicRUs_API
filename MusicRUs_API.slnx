@@ -1,3 +1,4 @@
 <Solution>
+    <Project Path="MusicRUs.API.Tests/MusicRUs.API.Tests.csproj" />
     <Project Path="MusicRUs.API\MusicRUs.API.csproj" />
 </Solution>
