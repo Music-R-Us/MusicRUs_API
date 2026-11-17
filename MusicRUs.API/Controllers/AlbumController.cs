@@ -26,8 +26,6 @@ public class AlbumController : ControllerBase
         try
         {
             var album = await _albumService.GetAlbumByIdAsync(id);
-            if (album == null)
-                return NotFound();
             return Ok(album);
         }
         catch (KeyNotFoundException ex)

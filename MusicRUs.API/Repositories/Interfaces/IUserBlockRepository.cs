@@ -12,4 +12,7 @@ public interface IUserBlockRepository : IRepository<UserBlock>
 
     // Get all blocks by a specific user
     Task<List<UserBlock>> GetBlocksByBlockerIdAsync(int blockerId);
+
+    // Get Ids of all users with a block in either direction
+    Task<List<int>> GetBlockedUserIdsAsync(int userId);
 }

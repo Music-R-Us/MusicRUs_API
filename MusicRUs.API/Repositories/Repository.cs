@@ -48,7 +48,7 @@ namespace MusicRUs.API.Repositories
             => await _dbSet.Where(e => ids.Contains(EF.Property<int>(e, "Id"))).ToListAsync();
 
         // Get paginated entities
-        public virtual async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(int page, int pageSize) 
+        /*public virtual async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(int page, int pageSize) 
         {
             var totalCount = await _dbSet.CountAsync(); // Get total count for pagination
             var items = await _dbSet
@@ -56,7 +56,7 @@ namespace MusicRUs.API.Repositories
                 .Take(pageSize) 
                 .ToListAsync(); // Get paginated items
             return (items, totalCount); // Return paginated items and total count
-        }
+        }*/
 
         // Search rows by predicate (predicate is a condition to filter the rows)
         public virtual async Task<IEnumerable<T>> SearchAsync(Expression<Func<T, bool>> predicate)
