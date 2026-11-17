@@ -46,7 +46,8 @@ public class ForumProfileController : ControllerBase
     {
         try
         {
-            var fp = await _fpService.GetFpByUserIdAsync(userId);
+            var viewerId = User.GetUserId();
+            var fp = await _fpService.GetFpByUserIdAsync(userId, viewerId);
             return Ok(fp);
         }
         catch (KeyNotFoundException ex)
@@ -82,7 +83,8 @@ public class ForumProfileController : ControllerBase
     [HttpGet("searchForumProfiles")]
     public async Task<ActionResult<IEnumerable<ForumProfileResponseDto>>> SearchPublicFpByKeyword([FromQuery] string keyword)
     {
-        return Ok(await _fpService.SearchPublicFpByKeywordAsync(keyword));
+        var viewerId = User.GetUserId();
+        return Ok(await _fpService.SearchPublicFpByKeywordAsync(keyword, viewerId));
     }
 
     // UPDATE

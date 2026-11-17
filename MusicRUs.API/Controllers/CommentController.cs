@@ -28,11 +28,12 @@ public class CommentController : ControllerBase
     {
         try
         {
+            var viewerId = User.GetUserId();
             var userId = User.GetUserId();
             if(userId == null)
                 return Unauthorized();
 
-            var comment = await _commentService.CreateCommentAsync(postId, userId.Value, dto);
+            var comment = await _commentService.CreateCommentAsync(postId, userId.Value, viewerId, dto);
             return CreatedAtAction(nameof(GetCommentById), new { id = comment.Id }, comment);
         }
         catch (KeyNotFoundException ex)
@@ -50,7 +51,8 @@ public class CommentController : ControllerBase
     {
         try
         {
-            var comment = await _commentService.GetCommentByIdAsync(id);
+            var viewerId = User.GetUserId();
+            var comment = await _commentService.GetCommentByIdAsync(id, viewerId);
             return Ok(comment);
         }
         catch (KeyNotFoundException ex)
@@ -65,7 +67,8 @@ public class CommentController : ControllerBase
     {
         try
         {
-            var comments = await _commentService.GetAllCommentsByForumPostIdAsync(postId);
+            var viewerId = User.GetUserId();
+            var comments = await _commentService.GetAllCommentsByForumPostIdAsync(postId, viewerId);
             return Ok(comments);   
         }
         catch (KeyNotFoundException ex)
