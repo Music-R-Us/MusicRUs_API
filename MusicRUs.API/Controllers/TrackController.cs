@@ -21,11 +21,15 @@ public class TrackController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<TrackResponseDto?>> GetTrackById(int id)
     {
-        var track = await _trackService.GetTrackByIdAsync(id);
-        if (track == null)
-            return NotFound();
-
-        return Ok(track);
+        try
+        {
+            var track = await _trackService.GetTrackByIdAsync(id);
+            return Ok(track);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound($"{ex.Message}");
+        }
     }
 
     //Search Track by Keyword

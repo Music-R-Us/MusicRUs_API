@@ -27,13 +27,19 @@ public class GenreService : IGenreService
     public async Task<GenreResponseDto?> GetGenreByIdAsync(int id) // READ
     {
         var genre = await _genreRepo.GetByIdAsync(id);
-        return genre is null ? null : MapToDto(genre); 
+        if(genre == null)
+            throw new KeyNotFoundException($"Genre with ID {id} not found.");
+
+        return MapToDto(genre); 
     }
     // Get genre by name
     public async Task<GenreResponseDto?> GetGenreByNameAsync(string name) // READ
     {
         var genre = await _genreRepo.GetByStringAsync(name);
-        return genre is null ? null : MapToDto(genre);
+        if(genre == null)
+            throw new KeyNotFoundException($"Genre with name {name} not found.");
+            
+        return MapToDto(genre);
     }
 
     //#########################################

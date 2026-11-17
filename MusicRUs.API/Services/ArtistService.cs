@@ -24,7 +24,7 @@ public class ArtistService : IArtistService
         await TryImportAsync(() => _catalogImportService.ImportArtistAlbumsAsync(id)); // Fetch releases from Spotify on first view
         var artist = await _artistRepo.GetByIdAsync(id);
         if(artist == null)
-            return null;
+            throw new KeyNotFoundException($"Artist with ID {id} not found.");
         
         return MapToWithAlbumsDto(artist);
     }
@@ -33,7 +33,7 @@ public class ArtistService : IArtistService
     {
         var artist = await _artistRepo.GetByStringAsync(name);
         if(artist == null)
-            return null;
+            throw new KeyNotFoundException($"Artist with name {name} not found.");
 
         return MapToWithAlbumsDto(artist);
     }

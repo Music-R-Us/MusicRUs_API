@@ -14,11 +14,11 @@ public class TrackService : ITrackService
         _trackRepo = trackRepo;
     }
 
-    public async Task<TrackResponseDto> GetTrackByIdAsync(int id) // READ
+    public async Task<TrackResponseDto?> GetTrackByIdAsync(int id) // READ
     {
         var track = await _trackRepo.GetByIdAsync(id);
         if (track == null) 
-            return null!;
+            throw new KeyNotFoundException($"Track with ID {id} not found.");
         
         return MapToDto(track);
 
