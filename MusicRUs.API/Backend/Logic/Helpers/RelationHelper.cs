@@ -5,7 +5,7 @@ namespace MusicRUs.API.Backend.Helpers;
 public static class RelationHelper 
 {
     public static async Task<List<T>> GetAllOrThrowAsync<T>(
-        IRepository<T> repo, IEnumerable<int> ids, string entityName) where T : class
+        IReadRepository<T> repo, IEnumerable<int> ids, string entityName) where T : class
     {
         var distinctIds = ids.Distinct().ToList();
         var entities = await repo.GetByIdsAsync(distinctIds); // Fetch entities by IDs

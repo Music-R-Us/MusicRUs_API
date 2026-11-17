@@ -2,7 +2,7 @@ using MusicRUs.API.Models.Entities;
 
 namespace MusicRUs.API.Repositories.Interfaces;
 
-public interface IAlbumRepository : IRepository<Album>
+public interface IAlbumRepository : IReadRepository<Album>
 {
     //Task<Album?> GetAlbumWithDetailsByIdAsync(int id);
     Task<Album?> GetAlbumWithDetailsBySpotifyIdAsync(string spotifyId);
