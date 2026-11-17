@@ -23,22 +23,30 @@ public class ArtistController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ArtistWithAlbumsResponseDto?>> GetArtistByIdAsync(int id)
     {
-        var artist = await _artistService.GetArtistByIdAsync(id);
-        if(artist == null)
-            return NotFound();
-        
-        return Ok(artist);
+        try
+        {
+            var artist = await _artistService.GetArtistByIdAsync(id);
+            return Ok(artist);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound($"{ex.Message}");
+        }
     }
  
     // Get Artist by Name
     [HttpGet("by-name")]
     public async Task<ActionResult<ArtistWithAlbumsResponseDto?>> GetArtistByNameAsync(string name) 
     {
-        var artist = await _artistService.GetArtistByNameAsync(name);
-        if(artist == null)
-            return NotFound();
-        
-        return Ok(artist);
+        try
+        {
+            var artist = await _artistService.GetArtistByNameAsync(name);
+            return Ok(artist);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound($"{ex.Message}");
+        }
     }
 
     // Search Artists by Keyword

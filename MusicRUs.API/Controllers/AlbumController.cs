@@ -38,10 +38,15 @@ public class AlbumController : ControllerBase
     [HttpGet("spotify/{spotifyId}")]
     public async Task<ActionResult<AlbumDetailsResponseDto?>> GetAlbumBySpotifyIdAsync(string spotifyId)
     {
-        var album = await _albumService.GetAlbumBySpotifyIdAsync(spotifyId);
-        if (album == null)
-            return NotFound();
-        return Ok(album);
+        try
+        {
+            var album = await _albumService.GetAlbumBySpotifyIdAsync(spotifyId);
+            return Ok(album);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound($"{ex.Message}");
+        }
     }
 
     // Get Album by Title
@@ -51,10 +56,15 @@ public class AlbumController : ControllerBase
         if (string.IsNullOrWhiteSpace(title))
             return BadRequest("Title is required.");
 
-        var album = await _albumService.GetAlbumByTitleAsync(title);
-        if (album == null)
-            return NotFound();
-        return Ok(album);
+        try
+        {
+            var album = await _albumService.GetAlbumByTitleAsync(title);
+            return Ok(album);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound($"{ex.Message}");
+        }
     }
 
     // Get all Albums by Artist ID
@@ -62,8 +72,8 @@ public class AlbumController : ControllerBase
     public async Task<ActionResult<IEnumerable<AlbumResponseDto>>> GetAlbumsByArtistIdAsync(int artistId)
     {
         var albums = await _albumService.GetAlbumsByArtistIdAsync(artistId);
-        if (albums == null || !albums.Any())
-            return NotFound();
+        //if (albums == null || !albums.Any())
+        //    return NotFound();
         
         return Ok(albums);
     }

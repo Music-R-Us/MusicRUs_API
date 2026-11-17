@@ -38,7 +38,7 @@ public class AlbumService : IAlbumService
             album = await _albumRepo.GetAlbumWithDetailsBySpotifyIdAsync(spotifyId);
         }
         if(album == null)
-            return null;
+            throw new KeyNotFoundException($"Album with Spotify ID {spotifyId} not found.");
         
         return MapToDetailsDto(album);
     }
@@ -47,7 +47,7 @@ public class AlbumService : IAlbumService
     {
         var album = await _albumRepo.GetAlbumWithDetailsByTitleAsync(title);
         if(album == null)
-            return null;
+            throw new KeyNotFoundException($"Album with title '{title}' not found.");
 
         return MapToDetailsDto(album);
     } 

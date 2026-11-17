@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MusicRUs.API.Controllers;
 using MusicRUs.API.DTOs;
+using NSubstitute.ExceptionExtensions;
 using MusicRUs.API.Services.Interfaces;
 using NSubstitute;
 
@@ -59,13 +60,15 @@ public class GenreControllerTests
     }
 
     [Fact]
-    public async Task GetGenreByIdAsync_UnknownId_ReturnsNotFound()
+    public async Task GetGenreByIdAsync_ServiceThrowsKeyNotFound_ReturnsNotFoundWithMessage()
     {
-        _service.GetGenreByIdAsync(999).Returns((GenreResponseDto?)null);
+        _service.GetGenreByIdAsync(999)
+            .ThrowsAsync(new KeyNotFoundException("Genre with ID 999 not found."));
 
         var result = await _sut.GetGenreByIdAsync(999);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        var notFound = Assert.IsType<NotFoundObjectResult>(result.Result);
+        Assert.Equal("Genre with ID 999 not found.", notFound.Value);
     }
 
     // GET api/genre/by-name?name=
@@ -82,12 +85,14 @@ public class GenreControllerTests
     }
 
     [Fact]
-    public async Task GetGenreByNameAsync_UnknownName_ReturnsNotFound()
+    public async Task GetGenreByNameAsync_ServiceThrowsKeyNotFound_ReturnsNotFoundWithMessage()
     {
-        _service.GetGenreByNameAsync("Polka").Returns((GenreResponseDto?)null);
+        _service.GetGenreByNameAsync("Polka")
+            .ThrowsAsync(new KeyNotFoundException("Genre with name Polka not found."));
 
         var result = await _sut.GetGenreByNameAsync("Polka");
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        var notFound = Assert.IsType<NotFoundObjectResult>(result.Result);
+        Assert.Equal("Genre with name Polka not found.", notFound.Value);
     }
 }

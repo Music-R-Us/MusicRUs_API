@@ -33,22 +33,30 @@ public class GenreController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<GenreResponseDto?>> GetGenreByIdAsync(int id)
     {
-        var genre = await _genreService.GetGenreByIdAsync(id);
-        if(genre == null)
-            return NotFound();
-        
-        return Ok(genre);
+        try
+        {
+            var genre = await _genreService.GetGenreByIdAsync(id);
+            return Ok(genre);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound($"{ex.Message}");
+        }
     }
 
     // Get genre by name
     [HttpGet("by-name")]
     public async Task<ActionResult<GenreResponseDto?>> GetGenreByNameAsync([FromQuery] string name)
     {
-        var genre = await _genreService.GetGenreByNameAsync(name);
-        if(genre == null)
-            return NotFound();
-        
-        return Ok(genre);
+        try
+        {
+            var genre = await _genreService.GetGenreByNameAsync(name);
+            return Ok(genre);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound($"{ex.Message}");
+        }
     }
 
 }

@@ -45,30 +45,20 @@ public class GenreServiceTests
 
     // GetGenreByIdAsync
     [Fact]
-    public async Task GetGenreByIdAsync_ExistingId_ReturnsDto()
-    {
-        _repo.GetByIdAsync(2).Returns(new Genre { Id = 2, Name = "Jazz" });
-
-        var result = await _sut.GetGenreByIdAsync(2);
-
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Id);
-        Assert.Equal("Jazz", result.Name);
-    }
-
-    [Fact]
-    public async Task GetGenreByIdAsync_UnknownId_ReturnsNull()
+    public async Task GetGenreByIdAsync_UnknownId_ThrowsKeyNotFoundException()
     {
         _repo.GetByIdAsync(999).Returns((Genre?)null);
 
-        var result = await _sut.GetGenreByIdAsync(999);
+        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() => _sut.GetGenreByIdAsync(999));
 
-        Assert.Null(result);
+        Assert.Contains("999", ex.Message);
     }
 
     [Fact]
     public async Task GetGenreByIdAsync_CallsRepositoryOnceWithId()
     {
+        _repo.GetByIdAsync(3).Returns(new Genre { Id = 3, Name = "Hip Hop" });
+
         await _sut.GetGenreByIdAsync(3);
 
         await _repo.Received(1).GetByIdAsync(3);
@@ -88,18 +78,20 @@ public class GenreServiceTests
     }
 
     [Fact]
-    public async Task GetGenreByNameAsync_UnknownName_ReturnsNull()
+    public async Task GetGenreByNameAsync_UnknownName_ThrowsKeyNotFoundException()
     {
         _repo.GetByStringAsync("Polka").Returns((Genre?)null);
 
-        var result = await _sut.GetGenreByNameAsync("Polka");
+        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() => _sut.GetGenreByNameAsync("Polka"));
 
-        Assert.Null(result);
+        Assert.Contains("Polka", ex.Message);
     }
 
     [Fact]
     public async Task GetGenreByNameAsync_CallsRepositoryOnceWithName()
     {
+        _repo.GetByStringAsync("Rock").Returns(new Genre { Id = 1, Name = "Rock" });
+
         await _sut.GetGenreByNameAsync("Rock");
 
         await _repo.Received(1).GetByStringAsync("Rock");
