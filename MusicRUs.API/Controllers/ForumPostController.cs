@@ -49,11 +49,12 @@ public class ForumPostController : ControllerBase
     //##############################################################################
     // Get ForumPost by ID
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<ForumPostResponseDto>> GetForumPostById(int id)
+    public async Task<ActionResult<ForumPostWithCommentsDto>> GetForumPostById(int id)
     {
         try
         {
-            var fp = await _fpService.GetForumPostByIdAsync(id);
+            var viewerId = User.GetUserId();
+            var fp = await _fpService.GetForumPostByIdAsync(id, viewerId);
             return Ok(fp);
         }
         catch (KeyNotFoundException ex)
@@ -68,7 +69,8 @@ public class ForumPostController : ControllerBase
     {
         try
         {
-            var fps = await _fpService.GetForumPostsByUserIdAsync(userId);
+            var viewerId = User.GetUserId();
+            var fps = await _fpService.GetForumPostsByUserIdAsync(userId, viewerId);
             return Ok(fps);
         }
         catch (KeyNotFoundException ex)
@@ -81,7 +83,8 @@ public class ForumPostController : ControllerBase
     [HttpGet("track/{trackId:int}")]
     public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetForumPostsByTrackId(int trackId)
     {
-        var fps = await _fpService.GetForumPostsByTrackIdAsync(trackId);
+        var viewerId = User.GetUserId();
+        var fps = await _fpService.GetForumPostsByTrackIdAsync(trackId, viewerId);
         return Ok(fps);
     }
 
@@ -89,7 +92,8 @@ public class ForumPostController : ControllerBase
     [HttpGet("album/{albumId:int}")]
     public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetForumPostsByAlbumId(int albumId)
     {
-        var fps = await _fpService.GetForumPostsByAlbumIdAsync(albumId);
+        var viewerId = User.GetUserId();
+        var fps = await _fpService.GetForumPostsByAlbumIdAsync(albumId, viewerId);
         return Ok(fps);
     }
 
@@ -97,7 +101,8 @@ public class ForumPostController : ControllerBase
     [HttpGet("artist/{artistId:int}")]
     public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetForumPostsByArtistId(int artistId)
     {
-        var fps = await _fpService.GetForumPostsByArtistIdAsync(artistId);
+        var viewerId = User.GetUserId();
+        var fps = await _fpService.GetForumPostsByArtistIdAsync(artistId, viewerId);
         return Ok(fps);
     }
 
@@ -105,7 +110,8 @@ public class ForumPostController : ControllerBase
     [HttpGet("genre/{genreId:int}")]
     public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetForumPostsByGenreId(int genreId)
     {
-        var fps = await _fpService.GetForumPostsByGenreIdAsync(genreId);
+        var viewerId = User.GetUserId();
+        var fps = await _fpService.GetForumPostsByGenreIdAsync(genreId, viewerId);
         return Ok(fps);
     }
 
@@ -113,7 +119,8 @@ public class ForumPostController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ForumPostResponseDto>>> GetAllForumPosts()
     {
-        var fps = await _fpService.GetAllForumPostsAsync();
+        var viewerId = User.GetUserId();
+        var fps = await _fpService.GetAllForumPostsAsync(viewerId);
         return Ok(fps);
     }
 

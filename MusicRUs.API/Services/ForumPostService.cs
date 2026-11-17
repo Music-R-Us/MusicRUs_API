@@ -11,12 +11,14 @@ public class ForumPostService : IForumPostService
     private readonly IForumPostRepository _fpRepo;
     private readonly IGenreRepository _genreRepo;
     private readonly IUserRepository _userRepo;
+    private readonly IUserBlockRepository _ubRepo;
 
-    public ForumPostService(IForumPostRepository fpRepo, IGenreRepository genreRepo, IUserRepository userRepo) 
+    public ForumPostService(IForumPostRepository fpRepo, IGenreRepository genreRepo, IUserRepository userRepo, IUserBlockRepository ubRepo) 
     {
         _fpRepo = fpRepo;  // Dependency Inversion for ForumPost repository (Dependency Inversion Principle)
         _genreRepo = genreRepo;  // Dependency Inversion for Genre repository (Dependency Inversion Principle)
         _userRepo = userRepo; // Dependency Inversion for User repository (Dependency Inversion Principle)
+        _ubRepo = ubRepo; // Dependency Inversion for UserBlock repository (Dependency Inversion Principle)
     }
 
     // Implement the methods defined in IForumPost interface
@@ -56,17 +58,27 @@ public class ForumPostService : IForumPostService
         return MapToDto(saved!); // Map the saved entity to DTO and return
     }
 
-    public async Task<ForumPostWithCommentsDto> GetForumPostByIdAsync(int id) // READ
+    public async Task<ForumPostWithCommentsDto> GetForumPostByIdAsync(int id, int? viewerId) // READ
     {
         var fp = await _fpRepo.GetByIdAsync(id);
         if(fp == null)
             throw new KeyNotFoundException("Forum post not found.");
 
-        return MapToDtoWithComments(fp);
+        // Get blocked user IDs for the viewer, if viewerId is provided
+        var blockedIds = viewerId.HasValue ? await _ubRepo.GetBlockedUserIdsAsync(viewerId.Value) : [];
+
+        // Post as not found if blocked
+        if(blockedIds.Contains(fp.UserId))
+            throw new KeyNotFoundException("Forum post not found.");
+
+        return MapToDtoWithComments(fp, blockedIds);
     }
 
-    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByUserIdAsync(int userId) // READ
+    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByUserIdAsync(int userId, int? viewerId) // READ
     {
+        if(viewerId != null && await _ubRepo.IsBlockedEitherWayAsync(viewerId.Value, userId))
+            throw new KeyNotFoundException("User not found.");
+
         var user = await _userRepo.GetByIdAsync(userId);
         if(user == null)
             throw new KeyNotFoundException("User not found.");
@@ -76,42 +88,45 @@ public class ForumPostService : IForumPostService
         return fps.Select(MapToDto).ToList();
     }
 
-    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByTrackIdAsync(int trackId) // READ
+    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByTrackIdAsync(int trackId, int? viewerId) // READ
     {
         var fps = await _fpRepo.GetForumPostsByTrackIdAsync(trackId);
-
+        fps = await FilterBlockedAsync(fps, viewerId); 
         return fps.Select(MapToDto).ToList();
     }
 
-    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByAlbumIdAsync(int albumId) // READ
+    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByAlbumIdAsync(int albumId, int? viewerId) // READ
     {
         var fps = await _fpRepo.GetForumPostsByAlbumIdAsync(albumId);
+        fps = await FilterBlockedAsync(fps, viewerId);
         return fps.Select(MapToDto).ToList();
     }
 
-    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByArtistIdAsync(int artistId) // READ
+    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByArtistIdAsync(int artistId, int? viewerId) // READ
     {
         var fps = await _fpRepo.GetForumPostsByArtistIdAsync(artistId);
+        fps = await FilterBlockedAsync(fps, viewerId);
         return fps.Select(MapToDto).ToList();
     }
 
-    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByGenreIdAsync(int genreId) // READ
+    public async Task<IEnumerable<ForumPostResponseDto>> GetForumPostsByGenreIdAsync(int genreId, int? viewerId) // READ
     {
         var fps = await _fpRepo.GetForumPostsByGenreIdAsync(genreId);
+        fps = await FilterBlockedAsync(fps, viewerId);
         return fps.Select(MapToDto).ToList();
     }
 
-    public async Task<IEnumerable<ForumPostResponseDto>> GetAllForumPostsAsync() // READ
+    public async Task<IEnumerable<ForumPostResponseDto>> GetAllForumPostsAsync(int? viewerId) // READ
     {
         var fps = await _fpRepo.GetAllAsync();
-
+        fps = await FilterBlockedAsync(fps, viewerId);
         return fps.Select(MapToDto).ToList();
     }
 
-    public async Task<IEnumerable<ForumPostResponseDto>> SearchForumPostsByKeywordAsync(string keyword) // READ
+    public async Task<IEnumerable<ForumPostResponseDto>> SearchForumPostsByKeywordAsync(string keyword, int? viewerId) // READ
     {
         var fps = await _fpRepo.SearchForumPostsByKeywordAsync(keyword);
-
+        fps = await FilterBlockedAsync(fps, viewerId);
         return fps.Select(MapToDto).ToList();
     }
 
@@ -161,6 +176,18 @@ public class ForumPostService : IForumPostService
 
     //#########################################
 
+    // Helper method to filter out posts from blocked users for the viewer
+    private async Task<IEnumerable<ForumPost>> FilterBlockedAsync(IEnumerable<ForumPost> posts, int? viewerId)
+    {
+        if(viewerId == null)
+            return posts;
+
+        var blockedIds = await _ubRepo.GetBlockedUserIdsAsync(viewerId.Value);
+        return posts.Where(p => !blockedIds.Contains(p.UserId));
+    }
+
+    //#########################################
+
     // Helper mapper ForumPost entity to ForumPostResponseDto (MapToDto)
     private ForumPostResponseDto MapToDto(ForumPost fp)
     {
@@ -184,7 +211,7 @@ public class ForumPostService : IForumPostService
         };
     }
 
-    private ForumPostWithCommentsDto MapToDtoWithComments(ForumPost fp)
+    private ForumPostWithCommentsDto MapToDtoWithComments(ForumPost fp, List<int> blockedIds)
     {
         return new ForumPostWithCommentsDto
         {
@@ -204,6 +231,7 @@ public class ForumPostService : IForumPostService
                 .Select(g => new GenreIncludeDto { Id = g.Id, Name = g.Name })
                 .ToList(),
             Comments = fp.Comments
+                .Where(c => !blockedIds.Contains(c.UserId))
                 .Select(c => new CommentIncludeDto { 
                     Id = c.Id, 
                     PostId = c.PostId,

@@ -60,14 +60,20 @@ public class MusicCollectionService : IMusicCollectionService
         return MapToDto(saved!);
     }
 
-    public async Task<IEnumerable<MusicCollectionResponseDto>> GetOwnedCollectionByUserIdAsync(int userId) // READ Owned
+    public async Task<IEnumerable<MusicCollectionResponseDto>> GetOwnedCollectionByUserIdAsync(int userId, int? viewerId) // READ Owned
     {
+        if(viewerId != null && await _ubRepo.IsBlockedEitherWayAsync(viewerId.Value, userId))
+            return [];
+
         var collection = await _mcRepo.GetCollectionByUserIdAsync(userId, CollectionStatus.Owned);
         return collection.Select(MapToDto).ToList();
     }
 
-    public async Task<IEnumerable<MusicCollectionResponseDto>> GetWantedCollectionByUserIdAsync(int userId) // READ Wanted
+    public async Task<IEnumerable<MusicCollectionResponseDto>> GetWantedCollectionByUserIdAsync(int userId, int? viewerId) // READ Wanted
     {
+        if(viewerId != null && await _ubRepo.IsBlockedEitherWayAsync(viewerId.Value, userId))
+            return [];
+
         var collection = await _mcRepo.GetCollectionByUserIdAsync(userId, CollectionStatus.Wanted);
         return collection.Select(MapToDto).ToList();
     }

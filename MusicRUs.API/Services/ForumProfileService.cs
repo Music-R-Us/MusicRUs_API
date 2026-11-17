@@ -12,17 +12,20 @@ public class ForumProfileService : IForumProfileService
     private readonly IArtistRepository _artistRepo;
     private readonly IAlbumRepository _albumRepo;
     private readonly IGenreRepository _genreRepo;
+    private readonly IUserBlockRepository _ubRepo;
 
     public ForumProfileService(
         IForumProfileRepository fpRepository, 
         IArtistRepository artistRepository, 
         IAlbumRepository albumRepository, 
-        IGenreRepository genreRepository)
+        IGenreRepository genreRepository,
+        IUserBlockRepository userBlockRepository)
     {
         _fpRepo = fpRepository;
         _artistRepo = artistRepository;
         _albumRepo = albumRepository;
         _genreRepo = genreRepository;
+        _ubRepo = userBlockRepository;
     }
 
     public async Task<ForumProfileResponseDto?> CreateFpAsync(CreateForumProfileDto dto) // CREATE
@@ -41,13 +44,17 @@ public class ForumProfileService : IForumProfileService
         return MapToDto(fp);
     }
 
-    public async Task<ForumProfileResponseDto?> GetFpByUserIdAsync(int userId) // READ
+    public async Task<ForumProfileResponseDto?> GetFpByUserIdAsync(int userId, int? viewerId) // READ
     {
+        // Check if the viewer is blocked by or has blocked the user
+        if(viewerId != null && await _ubRepo.IsBlockedEitherWayAsync(viewerId.Value, userId))
+            throw new KeyNotFoundException("Forum profile not found.");
+
         var fp = await _fpRepo.GetWithFavoritesAsync(userId);
         if (fp == null)
             throw new KeyNotFoundException("Forum profile not found.");
 
-        if (fp!.IsPublic == false)
+        if (fp.IsPublic == false)
             throw new UnauthorizedAccessException("Forum profile is not public.");
         
         return MapToDto(fp);
@@ -63,10 +70,17 @@ public class ForumProfileService : IForumProfileService
     }
 
     // Search profiles by displayname keyword
-    public async Task<IEnumerable<ForumProfileResponseDto>> SearchPublicFpByKeywordAsync(string keyword) // READ
+    public async Task<IEnumerable<ForumProfileResponseDto>> SearchPublicFpByKeywordAsync(string keyword, int? viewerId) // READ
     {
-        var fp = await _fpRepo.SearchPublicFpByKeywordAsync(keyword);
-        return fp.Select(MapToDto);
+        var fps = await _fpRepo.SearchPublicFpByKeywordAsync(keyword);
+
+        if(viewerId != null) // filter out blocked users for the viewer
+        {
+            var blockedIds = await _ubRepo.GetBlockedUserIdsAsync(viewerId.Value);
+            fps = fps.Where(f => !blockedIds.Contains(f.UserId));
+        }
+
+        return fps.Select(MapToDto);
     }
 
     public async Task<ForumProfileResponseDto?> UpdateFpAsync(int userId, ForumProfileUpdatedDto dto) // UPDATE

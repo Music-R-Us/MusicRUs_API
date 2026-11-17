@@ -9,17 +9,19 @@ public class CommentService : ICommentService
     private readonly ICommentRepository _commentRepo;
     private readonly IUserRepository _userRepo;
     private readonly IForumPostRepository _fpRepo;
+    private readonly IUserBlockRepository _ubRepo;
 
-    public CommentService(ICommentRepository commentRepo, IUserRepository userRepo, IForumPostRepository fpRepo)
+    public CommentService(ICommentRepository commentRepo, IUserRepository userRepo, IForumPostRepository fpRepo, IUserBlockRepository ubRepo)
     {
         _commentRepo = commentRepo;
         _userRepo = userRepo;
         _fpRepo = fpRepo;
+        _ubRepo = ubRepo;
     }
 
     // Implement the methods defined in ICommentService interface
 
-    public async Task<CommentResponseDto> CreateCommentAsync(int postId, int userId, CreateCommentDto dto) // CREATE
+    public async Task<CommentResponseDto> CreateCommentAsync(int postId, int userId, int? viewerId, CreateCommentDto dto) // CREATE
     {
         var user = await _userRepo.GetByIdAsync(userId);
         if (user == null)
@@ -28,6 +30,14 @@ public class CommentService : ICommentService
         var post = await _fpRepo.GetByIdAsync(postId);
         if (post == null)
             throw new KeyNotFoundException("Forum post not found");
+
+        // Check if the post author has blocked the viewer
+        if(viewerId != null)
+        {
+            var isBlocked = await _ubRepo.IsBlockedEitherWayAsync(viewerId.Value, post.UserId);
+            if(isBlocked)
+                throw new KeyNotFoundException("Forum post not found");
+        }
 
         var comment = new Comment // Map properties from dto to entity
         {
@@ -40,32 +50,49 @@ public class CommentService : ICommentService
         return MapToDto(comment);
     }
 
-    public async Task<CommentResponseDto> GetCommentByIdAsync(int id) // READ
+    public async Task<CommentResponseDto> GetCommentByIdAsync(int id, int? viewerId) // READ
     {
         var comment = await _commentRepo.GetByIdAsync(id);
         if (comment == null)
             throw new KeyNotFoundException("Comment not found");
 
-        return MapToDto(comment);
-    }
-
-    public async Task<CommentResponseDto> GetCommentByUserIdAsync(int userId) // READ
-    {
-        var comment = await _commentRepo.GetByUserIdAsync(userId);
-        if (comment == null)
+        if(viewerId != null && await _ubRepo.IsBlockedEitherWayAsync(viewerId.Value, comment.UserId))
             throw new KeyNotFoundException("Comment not found");
 
         return MapToDto(comment);
     }
 
-    public async Task<IEnumerable<CommentResponseDto>> GetAllCommentsByForumPostIdAsync(int postId) // READ
+    public async Task<CommentResponseDto> GetCommentByUserIdAsync(int userId, int? viewerId) // READ
+    {
+        var comment = await _commentRepo.GetByUserIdAsync(userId);
+        if (comment == null)
+            throw new KeyNotFoundException("Comment not found");
+
+        if(viewerId != null && await _ubRepo.IsBlockedEitherWayAsync(viewerId.Value, comment.UserId))
+            throw new KeyNotFoundException("Comment not found");
+
+        return MapToDto(comment);
+    }
+
+    public async Task<IEnumerable<CommentResponseDto>> GetAllCommentsByForumPostIdAsync(int postId, int? viewerId) // READ
     {
         var post = await _fpRepo.GetByIdAsync(postId);
         if (post == null)
             throw new KeyNotFoundException("Forum post not found");
-            
+
+        // Get the list of blocked user IDs for the viewer, if viewerId is provided
+        var blockedIds = viewerId.HasValue ? await _ubRepo.GetBlockedUserIdsAsync(viewerId.Value) : [];
+
+        // If the post author has blocked the viewer, treat the post as not found
+        if(blockedIds.Contains(post.UserId))
+            throw new KeyNotFoundException("Forum post not found");
+
         var comments = await _commentRepo.GetAllCommentsByForumPostIdAsync(postId);
-        return comments.OrderBy(c => c.CreatedAt).Select(MapToDto).ToList();
+        return comments
+            .Where(c => !blockedIds.Contains(c.UserId))
+            .OrderBy(c => c.CreatedAt)
+            .Select(MapToDto)
+            .ToList();
     }
 
     public async Task<CommentResponseDto> UpdateCommentAsync(int id, int userId, CommentUpdateDto dto) // UPDATE

@@ -72,7 +72,8 @@ public class MusicCollectionController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<List<MusicCollectionResponseDto>>> GetAllOwnedCollectionItemsByUserId(int userId)
     {
-        var items = await _mcService.GetOwnedCollectionByUserIdAsync(userId);
+        var viewerId = User.GetUserId();
+        var items = await _mcService.GetOwnedCollectionByUserIdAsync(userId, viewerId);
         return Ok(items);
     }
     
@@ -81,13 +82,13 @@ public class MusicCollectionController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<List<MusicCollectionResponseDto>>> GetAllWantedCollectionItemsByUserId(int userId)
     {
-        var items = await _mcService.GetWantedCollectionByUserIdAsync(userId);
+        var viewerId = User.GetUserId();
+        var items = await _mcService.GetWantedCollectionByUserIdAsync(userId, viewerId);
         return Ok(items);
     }
 
     // Get Collection Item by Id
     [HttpGet("{collectionId:int}")]
-    [AllowAnonymous]
     public async Task<ActionResult<MusicCollectionResponseDto>> GetCollectionItem(int collectionId)
     {
         try
