@@ -33,8 +33,12 @@ public class UserController : ControllerBase
     // Create User
     [EnableRateLimiting("auth")]
     [HttpPost]
-    public async Task<ActionResult<AuthResponseDto>> CreateUser([FromBody] CreateUserDto dto)
+    public async Task<ActionResult<AuthResponseDto>> CreateUser([FromBody] CreateUserDto dto, [FromServices] IConfiguration config)
     {
+        // Sign-up can be turned off on the hosted version with Signup__Enabled=false
+        if (!config.GetValue("Signup:Enabled", true))
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Sign-up is disabled." });
+
         try
         {
             var user = await _userService.CreateUserAsync(dto);
