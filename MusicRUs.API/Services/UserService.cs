@@ -49,7 +49,7 @@ public class UserService : IUserService
         return MapCurrentToDto(user);
     }
 
-    public async Task<UpdateUserResult> GoogleLoginAsync(GoogleUserInfo googleUser)
+    public async Task<UpdateUserResult> GoogleLoginAsync(GoogleUserInfo googleUser, bool allowSignup = true)
     {
         // Check if user exists and return existing user
         var user = await _userRepo.GetByGoogleIdAsync(googleUser.GoogleId);
@@ -65,6 +65,10 @@ public class UserService : IUserService
         {
             return UpdateUserResult.Fail(UpdateUserError.EmailInUse);
         }
+
+        //Existing Google users can still log in, but no new accounts are created
+        if (!allowSignup)
+            return UpdateUserResult.Fail(UpdateUserError.SignupDisabled);
 
         // Create new user if not found
         // Google names are not unique, so find a free username (fx "Mark1")

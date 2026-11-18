@@ -26,13 +26,15 @@ public class GoogleAuthController : ControllerBase
     }
     [EnableRateLimiting("auth")]
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponseDto>> GoogleLogin([FromBody] GoogleLoginDto dto)
-    {
+    public async Task<ActionResult<AuthResponseDto>> GoogleLogin([FromBody] GoogleLoginDto dto, [FromServices] IConfiguration config)
+        {
         var googleUser = await _googleAuthService.VerifyIdTokenAsync(dto.IdToken);
         if(googleUser == null)
             return Unauthorized(new { message = "Invalid Google ID token."});
         
-        var result = await _userService.GoogleLoginAsync(googleUser);
+        var result = await _userService.GoogleLoginAsync(googleUser, config.GetValue("Signup:Enabled", true));
+        if (result.Error == UpdateUserError.SignupDisabled)
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Sign-up is disabled." });
         if (result.Error == UpdateUserError.EmailInUse)
             return Conflict(new { message = "An account with this e-mail already exists. Log in with your password." });
 
